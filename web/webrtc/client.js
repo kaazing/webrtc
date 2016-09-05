@@ -4,6 +4,7 @@
  
 var loginPage = document.querySelector('#loginPage'); 
 var usernameInput = document.querySelector('#usernameInput'); 
+var passwordInput = document.querySelector('#passwordInput'); 
 var loginBtn = document.querySelector('#loginBtn'); 
 
 var callPage = document.querySelector('#callPage'); 
@@ -221,18 +222,54 @@ function handleVideo (myStream) {
              localVideo.src = stream;
          }
 			
+/*
+         var iceServers = $.ajax
+                ({
+                  type: "GET",
+                  url: "index1.php",
+                  dataType: 'json',
+                  async: false,
+                  headers: {
+                    "Authorization": "Basic " + btoa(USERNAME + ":" + PASSWORD)
+                  },
+                  data: '{ "comment" }',
+                  success: function (){
+                    alert('Thanks for your comment!'); 
+                  }
+                });*/
+         //*
+         var configuration = {
+             "iceTransportPolicy" : "relay",
+             "iceServers": [{
+                 "urls": [
+                     "stun:10.2.56.13:23000?transport=tcp"
+                 ]
+             }, {
+  "username": "1473107582:joe",
+  "credential": "H7dS8DnJltjw1kNwqqr//JiRz5s=",
+  "realm": "demo",
+  "ttl": 22400,
+  "urls": [
+    "turn:10.2.56.13:22000?transport=tcp"
+  ]
+}]
+         };/*/
 
+         var configuration = {
+             "iceServers": [{
+                 "urls": [
+                     "stun:gateway.kaazing.test:13000?transport=tcp"
+                 ]
+             }, {
+                 "username": "1472750796:joe",
+                 "credential": "PW0+e0NRc0M1T9MFz9eMwMLyfto=",
+                 "ttl": 22400,
+                 "urls": [
+                     "turn:gateway.kaazing.test:13000?transport=tcp"
+                 ]
+             }]
+         };*/
          
-         var configuration = { 
-            "iceTransportPolicy": 'relay',
-            "iceServers": [{ 
-                "url": "turn:10.2.56.32:3478",
-                "username": "kaztest",
-                "credential": "kazpass",
-                "credentialType": "password"
-            }]
-         };
-        
         console.log("debug : 2");
          yourConn = new peercon(configuration); 
          console.log("debug : 3");
@@ -338,8 +375,11 @@ function handleAnswer(answer) {
   
 //when we got an ice candidate from a remote user 
 function handleCandidate(candidate) { 
-   console.log("Entering handleCandidate");
-   
+   console.log("Entering handleCandidate", candidate);
+   if (candidate.candidate.indexOf("relay")<0) {
+       console.log("Not relay candidate");
+       return;
+   }
    console.log ("CANDIDATE : ", candidate);
    yourConn.addIceCandidate(new RTCIceCandidate(candidate)); 
    console.log("Exiting handleCandidate");
