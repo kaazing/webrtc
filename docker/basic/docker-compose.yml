@@ -1,0 +1,22 @@
+version: '2'
+services:
+  auth-server:
+    build: auth
+    hostname: "auth.kaazing.test"
+    ports: 
+    - "22000:22000"
+    - "18032:18032"
+    environment:
+    - GATEWAY_OPTS=-Dfeature.turn.proxy -Dfeature.turn.rest
+  coturn:
+    image:  dreamnetwork/coturn:4.4.5.3
+    entrypoint: ["/usr/bin/turnserver", "-n", "-a", "-v", "--use-auth-secret", "--realm=demo", "--static-auth-secret=kaazshared", "--rest-api-separator=:"]
+  broker:
+    image: kaazing/3rd-party:activemq-5.10.0
+  main-server:
+    build: gateway
+    ports:
+      - "18000:18000"
+    hostname: "gateway.kaazing.test"
+    environment:
+    - GATEWAY_OPTS=-Dfeature.turn.proxy -Dfeature.turn.rest

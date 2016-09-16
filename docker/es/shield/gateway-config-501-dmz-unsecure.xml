@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+
+    Copyright 2007-2016, Kaazing Corporation. All rights reserved.
+
+-->
+<gateway-config xmlns="http://xmlns.kaazing.org/2015/11/gateway">
+
+  <!--
+  #############################################################################
+  #############################################################################
+
+                Kaazing WebSocket Gateway Configuration File
+
+    See Kaazing Documentation for details: http://kaazing.com/documentation
+
+  #############################################################################
+  #############################################################################
+  -->
+
+  <properties>
+
+    <property>
+      <name>dmz.backplane.hostname</name>
+      <value>gateway.example.dmz.net</value>
+    </property>
+	<!-- Added for convenience for all the other services -->
+    <property>
+      <name>gateway.hostname</name>
+      <value>gateway.example.com</value>
+    </property>
+     <property>
+      <name>gateway.port</name>
+      <value>8000</value>
+    </property>
+    <property>
+      <name>gateway.extras.port</name>
+      <value>8001</value>
+    </property>
+
+  </properties>
+
+  <service>
+    <name>echo</name>
+    <description>Simple echo service</description>
+    <accept>ws://${gateway.hostname}:${gateway.port}/echo</accept>
+
+    <type>echo</type>
+
+    <!-- Restrict cross site constraints before running in production -->
+    <cross-site-constraint>
+      <!-- * is not secure for production javascript applications -->
+      <allow-origin>*</allow-origin>
+    </cross-site-constraint>
+  </service>
+
+
+  <service>
+    <name>DMZ TURN</name>
+    <accept>tcp://gateway.example.com:22000</accept>
+    <connect>tcp://gateway.example.com:22001</connect>
+          
+	<type>proxy</type>
+
+    <connect-options>
+      <http.transport>socks://gateway.example.com:1080</http.transport>
+      <socks.mode>reverse</socks.mode>
+      <socks.timeout>2 seconds</socks.timeout>
+      <socks.transport>wsn://gateway.example.com:1080/shield</socks.transport>
+      <ws.inactivity.timeout>60 seconds</ws.inactivity.timeout>
+    </connect-options>
+	
+	<!-- Since the *accept* host and *bind* hosts are different, we need this. -->
+    <cross-site-constraint>
+      <allow-origin>*</allow-origin>
+    </cross-site-constraint>  
+  </service>
+
+
+
+  <security>
+
+    <keystore>
+      <type>JCEKS</type>
+      <file>keystore.db</file>
+      <password-file>keystore.pw</password-file>
+    </keystore>
+
+    <truststore>
+      <file>truststore.db</file>
+    </truststore>
+
+    <realm>
+      <name>demo</name>
+      <description>Sample realm for file-based authentication</description>
+
+      <authentication>
+        <http-challenge-scheme>Application Basic</http-challenge-scheme>
+        <login-modules>
+          <login-module>
+            <type>file</type>
+            <success>required</success>
+            <options>
+              <file>jaas-config.xml</file>
+            </options>
+          </login-module>
+        </login-modules>
+      </authentication>
+    </realm>
+
+  </security>
+
+
+</gateway-config>
