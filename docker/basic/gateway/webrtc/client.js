@@ -263,7 +263,7 @@ function startChat() {
             "Authorization": "Basic " + btoa(username + ":" + password)
         },
         success: function(response) {
-            handleVideo.iceConfig = response;
+            handleVideo.iceConfig = [ response ];
 
             loginPage.style.display = "none";
 
