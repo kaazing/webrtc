@@ -2,6 +2,8 @@
 
 This JavaScript application demonstrates setting up WebRTC with the Kaazing Gateway and Kaazing JavaScript SDK.
 
+For more information about how to deploy WebRTC with the Kaazing WebSocket Gateway, see [Deploy WebRTC using the Gateway](https://kaazing.com/doc/5.0/integration-webrtc/p_integrate_webrtc/index.html).
+
 ### Runing the Demo Application via Docker (Recommended)
 
 This demo requires that you have Docker and Docker Compose installed. If this is your first time using Docker, follow the Docker Getting Started Guides:
@@ -38,4 +40,3 @@ This demo requires that the host name `kaazing.example.com` resolve to the Docke
 0. Open a second tab at [https://kaazing.example.com/demo/](https://kaazing.example.com/demo/) and log in with username **alice** and password **alice**.
 0. From the **alice** tab, you can now call bob.
  
-For more information about how to deploy WebRTC with the Kaazing WebSocket Gateway, see [Deploy WebRTC using the Gateway](https://kaazing.com/doc/5.0/integration-webrtc/p_integrate_webrtc/index.html).
