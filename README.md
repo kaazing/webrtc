@@ -29,9 +29,9 @@ This demo requires that the host name `kaazing.example.com` resolve to the Docke
 0. Add the following line to all the `/etc/hosts` file for all computers that will be accessing the Gateway: _`external_ip`_ `kaazing.example.com`.
 0. Download and run a TURN server.  If you choose to use [coTURN](https://github.com/coturn/coturn/wiki/turnserver), start it with the following command
 
-```
-coturn -n -a -v --use-auth-secret --realm=demo --static-auth-secret=kaazshared --rest-api-separator=:
-```
+  ```
+  coturn -n -a -v --use-auth-secret --realm=demo --static-auth-secret=kaazshared --rest-api-separator=:
+  ```
 
 0. In one browser tab, navigate to [https://kaazing.example.com/demo/](https://kaazing.example.com/demo/).  If this is your first time running the demo, you will be prompted with a security exception.  This exception appears because WebRTC requires clients run on a secure site and the demo certificate is not trusted by your browser.  Click through this dialogue (on Chrome click on the **Advanced** section).
 0. Log in with the user **bob** and password **bob**.
