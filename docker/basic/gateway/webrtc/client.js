@@ -239,16 +239,14 @@ function handleVideo(myStream) {
 
     // Setup ice handling 
     yourConn.onicecandidate = function(event) {
-        /*
         if (event.candidate) {
-            if (event.candidate.candidate.indexOf("relay") > 0) {
+            //if (event.candidate.candidate.indexOf("relay") > 0) {
                 send({
                     type: "candidate",
                     candidate: event.candidate
                 });
-            }
+            //}
         }
-        */
     };
 }
 
