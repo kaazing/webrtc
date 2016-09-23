@@ -1,9 +1,8 @@
-FROM kaazing/development-enterprise-gateway:5.1.3-RC001
+FROM kaazing/development-enterprise-gateway:5.1.3
 
 # Add gateway config
 COPY conf/gateway-config.xml conf/gateway-config.xml
 COPY conf/keystore.db conf/keystore.db
-COPY conf/keystore-dsa.db conf/keystore-dsa.db
 COPY conf/truststore.db conf/truststore.db
 COPY conf/jaas-config.xml conf/jaas-config.xml
 
@@ -18,5 +17,11 @@ ADD http://central.maven.org/maven2/org/apache/geronimo/specs/geronimo-jms_1.1_s
 ADD http://central.maven.org/maven2/org/apache/geronimo/specs/geronimo-j2ee-management_1.1_spec/1.0.1/geronimo-j2ee-management_1.1_spec-1.0.1.jar lib/ext/
 ADD http://central.maven.org/maven2/org/fusesource/hawtbuf/hawtbuf/1.11/hawtbuf-1.11.jar lib/ext/
 
+
+#ADD https://cdn.kaazing.com/releases/enterprise.javascript.client/4.1.0/kaazing-enterprise-javascript-client-4.1.0.zip web/webrtc/
+RUN wget https://cdn.kaazing.com/releases/enterprise.javascript.client/4.1.0/kaazing-enterprise-javascript-client-4.1.0.zip && \
+    unzip -q kaazing-enterprise-javascript-client-4.1.0.zip && \
+    rm kaazing-enterprise-javascript-client-4.1.0.zip && \
+    mv kaazing-enterprise-javascript-client-4.1.0/* /kaazing-gateway/web/webrtc/
 
 CMD ["bin/gateway.start"]

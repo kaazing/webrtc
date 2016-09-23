@@ -28,7 +28,7 @@ var consumer; // This is the consumer for our own JMS queue
 //connecting to our signaling server
 var conn;
 var session;
-var jmsServerURL = 'wss://gateway.kaazing.test:18000/jms';
+var jmsServerURL = 'wss://kaazing.example.com:443/jms';
 
 var peercon;
 if (window.mozRTCPeerConnection) {
@@ -240,10 +240,12 @@ function handleVideo(myStream) {
     // Setup ice handling 
     yourConn.onicecandidate = function(event) {
         if (event.candidate) {
-            send({
-                type: "candidate",
-                candidate: event.candidate
-            });
+            //if (event.candidate.candidate.indexOf("relay") > 0) {
+                send({
+                    type: "candidate",
+                    candidate: event.candidate
+                });
+            //}
         }
     };
 }
@@ -255,7 +257,7 @@ function startChat() {
 
     $.ajax({
         type: "GET",
-        url: "https://auth.kaazing.test:18032/turn.rest?service=turn",
+        url: "https://kaazing.example.com:443/turn.rest?service=turn",
         dataType: 'json',
         async: true,
         headers: {
@@ -266,7 +268,7 @@ function startChat() {
 
             loginPage.style.display = "none";
 
-            errMessage.style.display = "none";
+            //errMessage.style.display = "none";
             callPage.style.display = "block";
 
             //********************** 
