@@ -11,6 +11,16 @@
     <password>welcome</password>
     <role-name>AUTHORIZED</role-name>
   </user>
+  <user>
+    <name>alice</name>
+    <password>alice</password>
+    <role-name>AUTHORIZED</role-name>
+  </user>
+  <user>
+    <name>bob</name>
+    <password>bob</password>
+    <role-name>AUTHORIZED</role-name>
+  </user>
 
   <user>
     <name>admin</name>

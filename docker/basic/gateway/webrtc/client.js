@@ -28,7 +28,7 @@ var consumer; // This is the consumer for our own JMS queue
 //connecting to our signaling server
 var conn;
 var session;
-var jmsServerURL = 'wss://gateway.kaazing.test:18000/jms';
+var jmsServerURL = 'wss://kaazing.example.com:443/jms';
 
 navigator.kaazGetUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mediaDevices.getUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia || navigator.oGetUserMedia;
 var peercon;
@@ -256,7 +256,7 @@ function startChat() {
 
     $.ajax({
         type: "GET",
-        url: "https://auth.kaazing.test:18032/turn.rest?service=turn",
+        url: "https://kaazing.example.com:443/turn.rest?service=turn",
         dataType: 'json',
         async: true,
         headers: {
@@ -267,7 +267,7 @@ function startChat() {
 
             loginPage.style.display = "none";
 
-            errMessage.style.display = "none";
+            //errMessage.style.display = "none";
             callPage.style.display = "block";
 
             //********************** 
