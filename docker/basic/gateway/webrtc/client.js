@@ -30,7 +30,6 @@ var conn;
 var session;
 var jmsServerURL = 'wss://kaazing.example.com:443/jms';
 
-navigator.kaazGetUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mediaDevices.getUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia || navigator.oGetUserMedia;
 var peercon;
 if (window.mozRTCPeerConnection) {
     peercon = mozRTCPeerConnection;
@@ -240,12 +239,16 @@ function handleVideo(myStream) {
 
     // Setup ice handling 
     yourConn.onicecandidate = function(event) {
+        /*
         if (event.candidate) {
-            send({
-                type: "candidate",
-                candidate: event.candidate
-            });
+            if (event.candidate.candidate.indexOf("relay") > 0) {
+                send({
+                    type: "candidate",
+                    candidate: event.candidate
+                });
+            }
         }
+        */
     };
 }
 
@@ -275,21 +278,14 @@ function startChat() {
             //********************** 
 
             //getting local video stream 
-            if (navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({
-                    video: true,
-                    audio: true
-                }, handleVideo, function(error) {
-                    console.log("1", error);
-                });
-            } else {
-                navigator.kaazGetUserMedia({
-                    video: true,
-                    audio: true
-                }, handleVideo, function(error) {
-                    console.log("1", error);
-                });
-            }
+            navigator.mediaDevices.getUserMedia({
+              audio: true,
+              video: true
+            })
+            .then(handleVideo)
+            .catch(function(e) {
+              alert('getUserMedia() error: ' + e.name);
+            });
         },
         error: function() {
             errMessage.style.display = "block";
@@ -375,3 +371,4 @@ function handleLeave() {
     yourConn.onaddstream = null;
     startChat();
 };
+
