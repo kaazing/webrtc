@@ -40,6 +40,11 @@ if (window.mozRTCPeerConnection) {
 }
 
 $(document).ready(function() {
+    $('#passwordInput').keypress(function(event){
+      if(event.which == 13){
+        loginBtn.click();
+      }
+    });
     connectToSignallingJMS();
 });
 
