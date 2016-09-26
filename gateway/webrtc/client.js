@@ -40,11 +40,21 @@ if (window.mozRTCPeerConnection) {
 }
 
 $(document).ready(function() {
+    // All user to hit ENTER password field to login.
     $('#passwordInput').keypress(function(event){
       if(event.which == 13){
         loginBtn.click();
       }
     });
+
+    // Allow user to hit ENTER in username field to make a call.
+    $('#callToUsernameInput').keypress(function(event){
+      if(event.which == 13){
+        console.log('Calling...');
+        callBtn.click();
+      }
+    });
+
     connectToSignallingJMS();
 });
 
@@ -276,6 +286,8 @@ function startChat() {
 
             //errMessage.style.display = "none";
             callPage.style.display = "block";
+
+            $('#callToUsernameInput').focus();
 
             //**********************
             //Starting a peer connection
