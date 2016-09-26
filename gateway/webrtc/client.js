@@ -1,5 +1,5 @@
-//****** 
-//UI selectors block 
+//******
+//UI selectors block
 //******
 var loginPage = document.querySelector('#loginPage');
 var usernameInput = document.querySelector('#usernameInput');
@@ -21,7 +21,7 @@ var stream;
 var ownQueue;
 
 callPage.style.display = "none";
-var name; //our username 
+var name; //our username
 var connectedUser; // the remote username
 var consumer; // This is the consumer for our own JMS queue
 
@@ -40,6 +40,21 @@ if (window.mozRTCPeerConnection) {
 }
 
 $(document).ready(function() {
+    // All user to hit ENTER password field to login.
+    $('#passwordInput').keypress(function(event){
+      if(event.which == 13){
+        loginBtn.click();
+      }
+    });
+
+    // Allow user to hit ENTER in username field to make a call.
+    $('#callToUsernameInput').keypress(function(event){
+      if(event.which == 13){
+        console.log('Calling...');
+        callBtn.click();
+      }
+    });
+
     connectToSignallingJMS();
 });
 
@@ -81,11 +96,11 @@ function handleException(e) {
     console.log("<span class='error'>EXCEPTION: " + e + "</span>");
 }
 /*
-conn.onopen = function () { 
-   console.log("Connected to the signaling server"); 
+conn.onopen = function () {
+   console.log("Connected to the signaling server");
 };
   */
-//when we got a message from a signaling server 
+//when we got a message from a signaling server
 function handleMessage(message) {
     var data = {};
     data.type = message.getText();
@@ -102,14 +117,14 @@ function handleMessage(message) {
         case "login":
             handleLogin(data.success);
             break;
-            //when somebody wants to call us 
+            //when somebody wants to call us
         case "offer":
             handleOffer(data.offer, data.sender);
             break;
         case "answer":
             handleAnswer(data.answer);
             break;
-            //when a remote peer sends an ice candidate to us 
+            //when a remote peer sends an ice candidate to us
         case "candidate":
             handleCandidate(data.candidate);
             break;
@@ -121,18 +136,18 @@ function handleMessage(message) {
     }
 };
 
-/*conn.onerror = function (err) { 
-   console.log("Got error", err); 
+/*conn.onerror = function (err) {
+   console.log("Got error", err);
 };*/
 
-//alias for sending JSON encoded messages 
-/*function send(message) { 
-   //attach the other peer username to our messages 
-   if (connectedUser) { 
-      message.name = connectedUser; 
-   } 
-	
-   conn.send(JSON.stringify(message)); 
+//alias for sending JSON encoded messages
+/*function send(message) {
+   //attach the other peer username to our messages
+   if (connectedUser) {
+      message.name = connectedUser;
+   }
+
+   conn.send(JSON.stringify(message));
 };*/
 
 function send(message) {
@@ -180,26 +195,27 @@ function send(message) {
 
 
 
-// Login when the user clicks the button 
+// Login when the user clicks the button
 loginBtn.addEventListener("click", function(event) {
     name = usernameInput.value;
 
     if (name.length <= 0) {
         return;
     }
+
+    $('#displayUsername').text(name);
+
     ownQueue = session.createTopic("/topic/" + name);
     console.log("Created queue : " + ownQueue);
     if (ownQueue !== '') {
         startChat();
     }
 
-
     consumer = session.createConsumer(ownQueue);
     console.log("SUBSCRIBED to " + ownQueue);
     consumer.setMessageListener(function(message) {
         handleMessage(message);
     });
-
 
 });
 
@@ -208,7 +224,7 @@ function handleVideo(myStream) {
 
     console.log("debug : 1");
 
-    //displaying local video stream on the page 
+    //displaying local video stream on the page
     if (window.URL) {
         localVideo.src = window.URL.createObjectURL(stream);
     } else {
@@ -224,10 +240,10 @@ function handleVideo(myStream) {
     yourConn = new peercon(configuration);
     console.log("debug : 3");
 
-    // setup stream listening 
+    // setup stream listening
     yourConn.addStream(stream);
 
-    //when a remote user adds stream to the peer connection, we display it 
+    //when a remote user adds stream to the peer connection, we display it
     yourConn.onaddstream = function(e) {
         console.log("Adding stream ");
         if (window.URL) {
@@ -237,7 +253,7 @@ function handleVideo(myStream) {
         }
     };
 
-    // Setup ice handling 
+    // Setup ice handling
     yourConn.onicecandidate = function(event) {
         if (event.candidate) {
             //if (event.candidate.candidate.indexOf("relay") > 0) {
@@ -271,11 +287,13 @@ function startChat() {
             //errMessage.style.display = "none";
             callPage.style.display = "block";
 
-            //********************** 
-            //Starting a peer connection 
-            //********************** 
+            $('#callToUsernameInput').focus();
 
-            //getting local video stream 
+            //**********************
+            //Starting a peer connection
+            //**********************
+
+            //getting local video stream
             navigator.mediaDevices.getUserMedia({
               audio: true,
               video: true
@@ -292,7 +310,7 @@ function startChat() {
 
 };
 
-//initiating a call 
+//initiating a call
 callBtn.addEventListener("click", function() {
     var callToUsername = callToUsernameInput.value;
 
@@ -300,7 +318,7 @@ callBtn.addEventListener("click", function() {
 
         connectedUser = callToUsername;
 
-        // create an offer 
+        // create an offer
         yourConn.createOffer(function(offer) {
             console.log("Creating offer : ", offer);
             send({
@@ -316,13 +334,13 @@ callBtn.addEventListener("click", function() {
     }
 });
 
-//when somebody sends us an offer 
+//when somebody sends us an offer
 function handleOffer(offer, sender) {
     connectedUser = sender;
     remoteVideo.src = null;
     startChat();
     yourConn.setRemoteDescription(new RTCSessionDescription(offer));
-    //create an answer to an offer 
+    //create an answer to an offer
     yourConn.createAnswer(function(answer) {
         yourConn.setLocalDescription(answer);
 
@@ -343,14 +361,14 @@ function handleAnswer(answer) {
     console.log("Exiting handleAnswer");
 };
 
-//when we got an ice candidate from a remote user 
+//when we got an ice candidate from a remote user
 function handleCandidate(candidate) {
     console.log("Entering handleCandidate", candidate);
     yourConn.addIceCandidate(new RTCIceCandidate(candidate));
     console.log("Exiting handleCandidate");
 };
 
-//hang up 
+//hang up
 hangUpBtn.addEventListener("click", function() {
 
     send({
@@ -369,4 +387,3 @@ function handleLeave() {
     yourConn.onaddstream = null;
     startChat();
 };
-
