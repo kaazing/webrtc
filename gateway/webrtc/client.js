@@ -256,12 +256,14 @@ function handleVideo(myStream) {
     // Setup ice handling
     yourConn.onicecandidate = function(event) {
         if (event.candidate) {
-            if (event.candidate.candidate.indexOf("relay") > 0) {
+            // comment in if you want to force relay, this demo currently requires
+            // both callers to call if they want this.
+            //if (event.candidate.candidate.indexOf("relay") > 0) {
                 send({
                     type: "candidate",
                     candidate: new RTCIceCandidate(event.candidate)
                 });
-            }
+            //}
         }
     };
 }
