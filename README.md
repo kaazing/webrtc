@@ -32,17 +32,11 @@ This demo requires that the host name `kaazing.example.com` resolve to the Docke
 
 0. Download and install [Kaazing WebSocket Gateway - Enterprise Edition](http://kaazing.com/download/#ee-kwg). The location you install the Gateway will be referred to as `GATEWAY_HOME`.
 
-0. Copy the contents of `REPO_HOME\conf` into `GATEWAY_HOME\conf`, being sure to replace any files that already exist. These are the configuration files that will be used by the Gateway.
+0. Copy the contents of `REPO_HOME\gateway\conf` into `GATEWAY_HOME\conf`, being sure to replace any files that already exist. These are the configuration files that will be used by the Gateway.
 
-0. Copy the `REPO_HOME\webrtc` folder to `GATEWAY_HOME\web` such that `GATEWAY_HOME\web\webrtc` is a valid path. These are the application files that will run in a browser.
+0. Copy the `REPO_HOME\webrtc` folder to `GATEWAY_HOME\web` such that `GATEWAY_HOME\web\webrtc` is a valid path. These are the application files that will run in the browser.
 
-0. Next you need the client libraries. Download the [JavaScript client library](https://kaazing.com/download/#client-javascript). Extract `WebSocket.js` and `JmsClient.js`, and put them in `GATEWAY_HOME\web\webrtc`
-
-0. Add the following line to all the `/etc/hosts` file for all computers that will be accessing the Gateway: _`external_ip`_ `kaazing.example.com`. For example:
-
-  ```
-  192.168.1.105 kaazing.example.com
-  ```
+0. Next you need the client libraries. Download the [JavaScript client libraries](https://kaazing.com/download/#client-javascript). Extract the entire contents and of the zip file and put them in `GATEWAY_HOME\web\webrtc`
 
 0. Download and run a TURN server.  If you choose to use [coTURN](https://github.com/coturn/coturn/wiki/turnserver), start it with the following command:
 
@@ -50,29 +44,33 @@ This demo requires that the host name `kaazing.example.com` resolve to the Docke
   coturn -n -a -v --use-auth-secret --realm=demo --static-auth-secret=kaazshared --rest-api-separator=:
   ```
 
-0. The Gateway will connect to the JMS using the hostname `broker`. Therefore add an entry in the `/etc/hosts` file on the machine where the Gateway is running:
+0. Edit the `/etc/hosts` file on the machine where the Gateway will run and add the following:
 
   ```
-  ?.?.?.? broker
+  a.b.c.d kaazing.example.com broker
+  e.f.g.h coturn
   ```
 
-  where `?.?.?.?` is the IP address of the coTURN server, e.g. `127.0.0.1` if it is the same machine.
+  Replace `a.b.c.d` with the IP address of the Gateway host. The JMS broker will also run on this machine.
 
-0. The Gateway will connect to your coTURN server using the hostname `coturn`. Therefore add an entry in the `/etc/hosts` file on the machine where the Gateway is running:
+  Replace `e.f.g.h` with the IP address of the machine the TURN server is running on.
+
+0. Edit the `/etc/hosts` file on any machines where you will run the WebRTC client application in a browser and add the following:
 
   ```
-  ?.?.?.? coturn
+  a.b.c.d kaazing.example.com
   ```
 
-  where `?.?.?.?` is the IP address of the coTURN server.
+  Replace `a.b.c.d` with the IP address of the Gateway host.
 
-0. Start the gateway. Currently WebRTC is an [early access](https://kaazing.com/doc/5.0/admin-reference/p_configure_gateway_opts/#enable-early-access-features) feature, so you'll need to see the appropriate access flags first.
+0. Start the gateway. Currently WebRTC is an [early access](https://kaazing.com/doc/5.0/admin-reference/p_configure_gateway_opts/#enable-early-access-features) feature, so you'll need to see the appropriate access flags first: `turn.rest` and `turn.proxy`.
 
   **Windows:**
 
   ```
+  % cd GATEWAY_HOME
   % set GATEWAY_OPTS=-Dfeature.turn.rest -Dfeature.turn.proxy
-  % GATEWAY_HOME/bin/gateway.start --broker jms
+  % bin/gateway.start --broker jms
   ```
 
   (Remember to replace `GATEWAY_HOME` with the path where you installed the Gateway.)
@@ -82,7 +80,8 @@ This demo requires that the host name `kaazing.example.com` resolve to the Docke
   Since the gateway is using port 443, you'll need to use `sudo`:
 
   ```
-  $ sudo GATEWAY_OPTS="-Dfeature.turn.rest -Dfeature.turn.proxy" GATEWAY_HOME/bin/gateway.start --broker jms
+  $ cd GATEWAY_HOME
+  $ sudo GATEWAY_OPTS="-Dfeature.turn.rest -Dfeature.turn.proxy" bin/gateway.start --broker jms
   ```
 
   (Remember to replace `GATEWAY_HOME` with the path where you installed the Gateway.)
