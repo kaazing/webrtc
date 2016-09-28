@@ -22,7 +22,7 @@ var ownQueue;
 
 callPage.style.display = "none";
 var name; //our username
-var connectedUser; // the remote username
+var connectedUser=null; // the remote username
 var consumer; // This is the consumer for our own JMS queue
 
 //connecting to our signaling server
@@ -102,6 +102,7 @@ conn.onopen = function () {
   */
 //when we got a message from a signaling server
 function handleMessage(message) {
+    console.log("Entering handleMessage: ", message);
     var data = {};
     data.type = message.getText();
     var props = message.getPropertyNames();
@@ -134,6 +135,7 @@ function handleMessage(message) {
         default:
             break;
     }
+    console.log("Exiting handleMessage");
 };
 
 /*conn.onerror = function (err) {
@@ -197,6 +199,7 @@ function send(message) {
 
 // Login when the user clicks the button
 loginBtn.addEventListener("click", function(event) {
+    console.log("Entering loginBtn.click ", event);
     name = usernameInput.value;
 
     if (name.length <= 0) {
@@ -216,10 +219,16 @@ loginBtn.addEventListener("click", function(event) {
     consumer.setMessageListener(function(message) {
         handleMessage(message);
     });
-
+    console.log("Exiting loginBtn.click");
 });
+// sleep time expects milliseconds
+function sleep (time) {
+  return new Promise((resolve) => setTimeout(resolve, time));
+}
+
 
 function handleVideo(myStream) {
+    console.log("Entering handleVideo", myStream);
     stream = myStream;
 
     console.log("debug : 1");
@@ -245,17 +254,42 @@ function handleVideo(myStream) {
 
     //when a remote user adds stream to the peer connection, we display it
     yourConn.onaddstream = function(e) {
-        console.log("Adding stream ");
+        console.log("Entering onaddstream", e);
         if (window.URL) {
             remoteVideo.src = window.URL.createObjectURL(e.stream);
         } else {
             remoteVideo.src = e.stream;
         }
+        if (true == answerReceived) { console.log("Exiting onaddstream"); return; }
+
+        if (connectedUser !== undefined && connectedUser.length > 0) {
+            // Usage!
+            sleep(2000).then(() => {
+                console.log("Sending offer back ");
+
+                            // create an offer
+                            yourConn.createOffer(function(offer) {
+                                console.log("Creating offer : ", offer);
+                                send({
+                                    type: "offer",
+                                    offer: offer
+                                });
+
+                                yourConn.setLocalDescription(offer);
+                            }, function(error) {
+                                console.log("Error when creating an offer", error);
+                            });
+            });
+        }
+        console.log("Exiting onaddstream");
     };
 
     // Setup ice handling
     yourConn.onicecandidate = function(event) {
+        console.log("Entering onicecandidate", event);
         if (event.candidate) {
+            // comment in if you want to force relay, this demo currently requires
+            // both callers to call if they want this.
             if (event.candidate.candidate.indexOf("relay") > 0) {
                 send({
                     type: "candidate",
@@ -263,11 +297,13 @@ function handleVideo(myStream) {
                 });
             }
         }
+        console.log("Exiting onicecandidate");
     };
+    console.log("Exiting handleVideo");
 }
 
 function startChat() {
-
+    console.log("Entering startChat");
     username = usernameInput.value;
     password = passwordInput.value;
 
@@ -280,6 +316,7 @@ function startChat() {
             "Authorization": "Basic " + btoa(username + ":" + password)
         },
         success: function(response) {
+            console.log("Entering authorization success response handler", response);
             handleVideo.iceConfig = [ response ];
 
             loginPage.style.display = "none";
@@ -302,16 +339,19 @@ function startChat() {
             .catch(function(e) {
               alert('getUserMedia() error: ' + e.name);
             });
+            console.log("Exiting authorization success response handler");
         },
         error: function() {
             errMessage.style.display = "block";
         }
     });
+    console.log("Exiting startChat");
 
 };
 
 //initiating a call
 callBtn.addEventListener("click", function() {
+    console.log("Entering callBtn.click");
     var callToUsername = callToUsernameInput.value;
 
     if (callToUsername.length > 0) {
@@ -332,32 +372,40 @@ callBtn.addEventListener("click", function() {
         });
 
     }
+    console.log("Exiting callBtn.click");
 });
 
 //when somebody sends us an offer
 function handleOffer(offer, sender) {
+    console.log("Entering handleOffer", offer, sender);
     connectedUser = sender;
     remoteVideo.src = null;
     startChat();
     yourConn.setRemoteDescription(new RTCSessionDescription(offer));
     //create an answer to an offer
     yourConn.createAnswer(function(answer) {
+        console.log("Entering createAnswer signalling", answer);
         yourConn.setLocalDescription(answer);
 
         send({
             type: "answer",
             answer: answer
         });
+        console.log("Exiting createAnswer signalling");
 
     }, function(error) {
         console.log("Error when creating an answer", error);
     });
+
+    console.log("Exiting handleOffer");
 };
 
+var answerReceived = false;
 //when we got an answer from a remote user
 function handleAnswer(answer) {
     console.log("Entering handleAnswwer");
     yourConn.setRemoteDescription(new RTCSessionDescription(answer));
+    answerReceived = true;
     console.log("Exiting handleAnswer");
 };
 
@@ -379,6 +427,7 @@ hangUpBtn.addEventListener("click", function() {
 });
 
 function handleLeave() {
+    console.log("Entering handleLeave");
     connectedUser = null;
     remoteVideo.src = null;
 
@@ -386,4 +435,5 @@ function handleLeave() {
     yourConn.onicecandidate = null;
     yourConn.onaddstream = null;
     startChat();
+    console.log("Exiting handleLeave");
 };
