@@ -21,65 +21,64 @@
   <properties>
 
     <property>
-      <name>dmz.backplane.hostname</name>
-      <value>gateway.example.dmz.net</value>
-    </property>
-	<!-- Added for convenience for all the other services -->
-    <property>
       <name>gateway.hostname</name>
-      <value>gateway.example.com</value>
+      <value>shield.example.com</value>
     </property>
-     <property>
-      <name>gateway.port</name>
-      <value>8000</value>
-    </property>
+
     <property>
-      <name>gateway.extras.port</name>
-      <value>8001</value>
+      <name>backend.hostname</name>
+      <value>kaazing.example.com</value>
+    </property>
+
+    <property>
+      <name>http.port</name>
+      <value>443</value>
+    </property>
+
+    <property>
+      <name>webrtc.port</name>
+      <value>3478</value>
     </property>
 
   </properties>
 
   <service>
-    <name>echo</name>
-    <description>Simple echo service</description>
-    <accept>ws://${gateway.hostname}:${gateway.port}/echo</accept>
+    <name>http.shield</name>
+    <description>Shield for http services</description>
+    <accept>tcp://${gateway.hostname}:${http.port}</accept>
+    <connect>tcp://${backend.hostname}:${http.port}</connect>
 
-    <type>echo</type>
-
-    <!-- Restrict cross site constraints before running in production -->
-    <cross-site-constraint>
-      <!-- * is not secure for production javascript applications -->
-      <allow-origin>*</allow-origin>
-    </cross-site-constraint>
-  </service>
-
-
-  <service>
-    <name>DMZ TURN</name>
-    <accept>tcp://gateway.example.com:22000</accept>
-    <connect>tcp://gateway.example.com:22001</connect>
-          
-	<type>proxy</type>
+    <type>proxy</type>
 
     <connect-options>
-      <http.transport>socks://gateway.example.com:1080</http.transport>
+      <tcp.transport>socks://${gateway.hostname}:1080</tcp.transport>
       <socks.mode>reverse</socks.mode>
       <socks.timeout>2 seconds</socks.timeout>
-      <socks.transport>wsn://gateway.example.com:1080/shield</socks.transport>
+      <socks.transport>wsn://${gateway.hostname}:1080/http.shield</socks.transport>
       <ws.inactivity.timeout>60 seconds</ws.inactivity.timeout>
     </connect-options>
-	
-	<!-- Since the *accept* host and *bind* hosts are different, we need this. -->
-    <cross-site-constraint>
-      <allow-origin>*</allow-origin>
-    </cross-site-constraint>  
+
   </service>
 
+  <service>
+    <name>turn.shield</name>
+    <description>Shield for http services</description>
+    <accept>tcp://${gateway.hostname}:${webrtc.port}</accept>
+    <connect>tcp://${backend.hostname}:${webrtc.port}</connect>
 
+    <type>proxy</type>
+
+    <connect-options>
+      <tcp.transport>socks://${gateway.hostname}:1080</tcp.transport>
+      <socks.mode>reverse</socks.mode>
+      <socks.timeout>2 seconds</socks.timeout>
+      <socks.transport>wsn://${gateway.hostname}:1080/webrtc.shield</socks.transport>
+      <ws.inactivity.timeout>60 seconds</ws.inactivity.timeout>
+    </connect-options>
+
+  </service>
 
   <security>
-
     <keystore>
       <type>JCEKS</type>
       <file>keystore.db</file>
@@ -95,7 +94,7 @@
       <description>Sample realm for file-based authentication</description>
 
       <authentication>
-        <http-challenge-scheme>Application Basic</http-challenge-scheme>
+        <http-challenge-scheme>Basic</http-challenge-scheme>
         <login-modules>
           <login-module>
             <type>file</type>

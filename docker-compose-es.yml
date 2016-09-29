@@ -1,0 +1,19 @@
+version: '2'
+services:
+  coturn:
+    image:  dreamnetwork/coturn:4.4.5.3
+    entrypoint: ["/usr/bin/turnserver", "-n", "-a", "-v", "--use-auth-secret", "--realm=demo", "--static-auth-secret=kaazshared", "--rest-api-separator=:"]
+  broker:
+    image: kaazing/3rd-party:activemq-5.10.0
+  shield.example.com:
+    build: enterprise-shield-gateway
+    ports:
+      - "443:443"
+      - "3478:3478"
+    environment:
+    - GATEWAY_OPTS=-Dfeature.turn.proxy -Dfeature.turn.rest
+  kaazing.example.com:
+    build: gateway
+    environment:
+    - GATEWAY_OPTS=-Dfeature.turn.proxy -Dfeature.turn.rest
+    command: bin/gateway.start --config conf/gateway-config-es.xml
