@@ -22,6 +22,7 @@ ADD http://central.maven.org/maven2/org/fusesource/hawtbuf/hawtbuf/1.11/hawtbuf-
 RUN wget https://cdn.kaazing.com/releases/enterprise.javascript.client/4.1.0/kaazing-enterprise-javascript-client-4.1.0.zip && \
     unzip -q kaazing-enterprise-javascript-client-4.1.0.zip && \
     rm kaazing-enterprise-javascript-client-4.1.0.zip && \
-    mv kaazing-enterprise-javascript-client-4.1.0/* /kaazing-gateway/web/webrtc/
+    mkdir /kaazing-gateway/web/webrtc/lib/ && \
+    mv kaazing-enterprise-javascript-client-4.1.0/* /kaazing-gateway/web/webrtc/lib/
 
 CMD ["bin/gateway.start"]
