@@ -223,11 +223,6 @@ loginBtn.addEventListener("click", function(event) {
     });
     console.log("Exiting loginBtn.click");
 });
-// sleep time expects milliseconds
-//function sleep (time) {
-//  return new Promise((resolve) => setTimeout(resolve, time));
-//}
-
 
 function handleVideo(myStream) {
     console.log("Entering handleVideo", myStream);
@@ -321,7 +316,6 @@ function handleVideo(myStream) {
         console.log("Entering onicecandidate", event);
         if (event.candidate) {
             // comment in if you want to force relay, this demo currently requires
-            // both callers to call if they want this.
             if (event.candidate.candidate.indexOf("relay") > 0) {
                 send({
                     type: "candidate",
