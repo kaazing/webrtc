@@ -222,9 +222,9 @@ loginBtn.addEventListener("click", function(event) {
     console.log("Exiting loginBtn.click");
 });
 // sleep time expects milliseconds
-function sleep (time) {
-  return new Promise((resolve) => setTimeout(resolve, time));
-}
+//function sleep (time) {
+//  return new Promise((resolve) => setTimeout(resolve, time));
+//}
 
 
 function handleVideo(myStream) {
@@ -260,26 +260,53 @@ function handleVideo(myStream) {
         } else {
             remoteVideo.src = e.stream;
         }
+        
+        callBtn.style.display='none';
+        callToUsernameInput.style.display='none';
+        hangUpBtn.style.display='block';
+
         if (true == answerReceived) { console.log("Exiting onaddstream"); return; }
 
         if (connectedUser !== undefined && connectedUser.length > 0) {
             // Usage!
-            sleep(2000).then(() => {
-                console.log("Sending offer back ");
+             bootbox.confirm({
+                message: "You are receiving a call from "+connectedUser, 
+                buttons: {
+                    confirm: {
+                        label: 'Answer',
+                        className: 'btn-success'
+                    },
+                    cancel: {
+                        label: 'Hang Up',
+                        className: 'btn-danger'
+                    }
+                },
+                callback: function(answer) {
+                    console.log("Sending offer back ");
+                            if (answer == true)  {
+                                // create an offer
+                                yourConn.createOffer(function(offer) {
+                                    console.log("Creating offer : ", offer);
+                                    send({
+                                        type: "offer",
+                                        offer: offer
+                                    });
 
-                            // create an offer
-                            yourConn.createOffer(function(offer) {
-                                console.log("Creating offer : ", offer);
-                                send({
-                                    type: "offer",
-                                    offer: offer
+                                    yourConn.setLocalDescription(offer);
+                                    
+
+                                }, function(error) {
+                                    console.log("Error when creating an offer", error);
                                 });
-
-                                yourConn.setLocalDescription(offer);
-                            }, function(error) {
-                                console.log("Error when creating an offer", error);
-                            });
-            });
+                            } else {
+                                callBtn.style.display='block';
+                                callToUsernameInput.style.display='block';
+                                hangUpBtn.style.display='none';
+                                
+                                leave();
+                            }
+                }
+                });
         }
         console.log("Exiting onaddstream");
     };
@@ -323,6 +350,10 @@ function startChat() {
 
             //errMessage.style.display = "none";
             callPage.style.display = "block";
+            
+            callBtn.style.display='block';
+            callToUsernameInput.style.display='block';
+            hangUpBtn.style.display='none';
 
             $('#callToUsernameInput').focus();
 
@@ -352,9 +383,15 @@ function startChat() {
 //initiating a call
 callBtn.addEventListener("click", function() {
     console.log("Entering callBtn.click");
+
     var callToUsername = callToUsernameInput.value;
 
+    
     if (callToUsername.length > 0) {
+
+        callBtn.style.display='none';
+        callToUsernameInput.style.display='none';
+        hangUpBtn.style.display='block';
 
         connectedUser = callToUsername;
 
@@ -382,9 +419,14 @@ function handleOffer(offer, sender) {
     remoteVideo.src = null;
     startChat();
     yourConn.setRemoteDescription(new RTCSessionDescription(offer));
+
     //create an answer to an offer
     yourConn.createAnswer(function(answer) {
         console.log("Entering createAnswer signalling", answer);
+        
+        callBtn.style.display='none';
+        callToUsernameInput.style.display='none';
+        hangUpBtn.style.display='block';
         yourConn.setLocalDescription(answer);
 
         send({
@@ -417,19 +459,24 @@ function handleCandidate(candidate) {
 };
 
 //hang up
-hangUpBtn.addEventListener("click", function() {
+hangUpBtn.addEventListener("click", leave);
 
+function leave() {
     send({
         type: "leave"
     });
-
     handleLeave();
-});
+}
 
 function handleLeave() {
     console.log("Entering handleLeave");
     connectedUser = null;
     remoteVideo.src = null;
+    callBtn.style.display='block';
+    callToUsernameInput.style.display='block';
+    hangUpBtn.style.display='none';
+    answerReceived = false;
+    bootbox.hideAll()
 
     yourConn.close();
     yourConn.onicecandidate = null;
