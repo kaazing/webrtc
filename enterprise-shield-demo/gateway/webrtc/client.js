@@ -243,7 +243,7 @@ function handleVideo(myStream) {
         if (event.candidate) {
             send({
                 type: "candidate",
-                candidate: event.candidate
+                candidate: new RTCIceCandidate(event.candidate)
             });
         }
     };
