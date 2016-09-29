@@ -16,6 +16,8 @@ var hangUpBtn = document.querySelector('#hangUpBtn');
 var localVideo = document.querySelector('#localVideo');
 var remoteVideo = document.querySelector('#remoteVideo');
 
+var overlay = document.querySelector('#overlay');
+
 var yourConn;
 var stream;
 var ownQueue;
@@ -54,7 +56,7 @@ $(document).ready(function() {
         callBtn.click();
       }
     });
-
+    overlay.style.visibility='hidden';
     connectToSignallingJMS();
 });
 
@@ -263,7 +265,9 @@ function handleVideo(myStream) {
         
         callBtn.style.display='none';
         callToUsernameInput.style.display='none';
-        hangUpBtn.style.display='block';
+        hangUpBtn.style.display='inline';
+        overlay.style.visibility='visible';
+        overlay.innerText='Connected to '+connectedUser;
 
         if (true == answerReceived) { console.log("Exiting onaddstream"); return; }
 
@@ -299,8 +303,9 @@ function handleVideo(myStream) {
                                     console.log("Error when creating an offer", error);
                                 });
                             } else {
-                                callBtn.style.display='block';
-                                callToUsernameInput.style.display='block';
+                                callBtn.style.display='inline';
+                                callToUsernameInput.style.display='inline';
+                                overlay.style.visibility='hidden';
                                 hangUpBtn.style.display='none';
                                 
                                 leave();
@@ -351,9 +356,10 @@ function startChat() {
             //errMessage.style.display = "none";
             callPage.style.display = "block";
             
-            callBtn.style.display='block';
-            callToUsernameInput.style.display='block';
+            callBtn.style.display='inline';
+            callToUsernameInput.style.display='inline';
             hangUpBtn.style.display='none';
+            overlay.style.visibility='hidden';
 
             $('#callToUsernameInput').focus();
 
@@ -389,11 +395,14 @@ callBtn.addEventListener("click", function() {
     
     if (callToUsername.length > 0) {
 
+        connectedUser = callToUsername;
+
         callBtn.style.display='none';
         callToUsernameInput.style.display='none';
-        hangUpBtn.style.display='block';
+        hangUpBtn.style.display='inline';
+        overlay.style.visibility='visible';
+        overlay.innerText='Connected to '+connectedUser;
 
-        connectedUser = callToUsername;
 
         // create an offer
         yourConn.createOffer(function(offer) {
@@ -426,7 +435,9 @@ function handleOffer(offer, sender) {
         
         callBtn.style.display='none';
         callToUsernameInput.style.display='none';
-        hangUpBtn.style.display='block';
+        hangUpBtn.style.display='inline';
+        overlay.style.visibility='visible';
+        overlay.innerText='Connected to '+connectedUser;
         yourConn.setLocalDescription(answer);
 
         send({
@@ -472,9 +483,10 @@ function handleLeave() {
     console.log("Entering handleLeave");
     connectedUser = null;
     remoteVideo.src = null;
-    callBtn.style.display='block';
-    callToUsernameInput.style.display='block';
+    callBtn.style.display='inline';
+    callToUsernameInput.style.display='inline';
     hangUpBtn.style.display='none';
+    overlay.style.visibility='hidden';
     answerReceived = false;
     bootbox.hideAll()
 

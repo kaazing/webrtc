@@ -7,11 +7,13 @@
       <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
       <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/4.4.0/bootbox.min.js"></script>
+      
       <script src="WebSocket.js"></script>
       <script src="JmsClient.js"></script>
    </head>
 
    <style>
+
 
       body {
          background: #eee;
@@ -49,6 +51,19 @@
          height: 500px;
       }
 
+       #overlay {
+          position: absolute; 
+          top: 15px; 
+          left: 0px; 
+          color: #FFF; 
+          text-align: center;
+          font-size: 10px;
+          background-color: rgba(221, 221, 221, 0.3);
+          width: 640px;
+          padding: 10px 0;
+          z-index: 2147483647;
+      }
+      
    </style>
 
    <body>
@@ -76,6 +91,7 @@
    <div id = "callPage" class = "call-page">
       <video id = "localVideo" autoplay muted></video>
       <video id = "remoteVideo" autoplay></video>
+      <div id="overlay"></div>
 
       <div class = "row text-center">
          <div class = "col-md-12">
@@ -93,6 +109,8 @@
       </div>
 
    </div>
+   
+   
 
    <script src = "client.js"></script>
 
