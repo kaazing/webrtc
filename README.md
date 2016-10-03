@@ -26,6 +26,15 @@ This demo requires that the host name `kaazing.example.com` resolve to the Docke
 
 0. From the **alice** tab, you can now call bob.
 
+
+##### Running Enterprise Shield (Optional)
+
+You can setup the same configuration but this time using [Enterprise Shield](https://kaazing.com/product-enterprise-shield/) to protect your topology.
+
+0.  Stop all docker containers from previous demo
+
+0.  Run `docker-compose -f docker-compose-es.yml up --build`
+
 ### Running in Your Local Environment
 
 0. Clone or fork this repo. The location you cloned this repo to will be referred to as `REPO_HOME`.
