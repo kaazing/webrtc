@@ -1,0 +1,40 @@
+version: '2'
+services:
+  coturn:
+    image:  dreamnetwork/coturn:4.4.5.3
+    entrypoint: ["/usr/bin/turnserver", "-n", "-a", "-v", "--use-auth-secret", "--realm=demo", "--static-auth-secret=kaazshared", "--rest-api-separator=:"]
+  broker:
+    image: kaazing/3rd-party:activemq-5.10.0
+  g1.kaazing.example.com:
+    build: gateway
+    environment:
+    - GATEWAY_OPTS=-Dfeature.turn.proxy -Dfeature.turn.rest
+    networks:
+      test:
+        ipv4_address: 172.18.0.4
+    dns: 172.18.0.2
+  g2.kaazing.example.com:
+    build: gateway
+    environment:
+    - GATEWAY_OPTS=-Dfeature.turn.proxy -Dfeature.turn.rest
+    networks:
+      test:
+        ipv4_address: 172.18.0.5
+    dns: 172.18.0.2
+  dns.example.com:
+    image:   sameersbn/bind:latest
+    volumes: 
+       - ./dns/data:/data
+    networks:
+      test:
+       ipv4_address: 172.18.0.2
+networks:
+  test:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: "false"
+    ipam:
+      driver: default
+      config:
+      - subnet: 172.18.0.0/24
+        gateway: 172.18.0.1
