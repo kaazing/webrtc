@@ -53,6 +53,10 @@
       <url>turn:${gateway.hostname}:${webrtc.port}?transport=tcp</url>
     </properties>
 
+    <accept-options>
+	<tcp.bind>${http.port}</tcp.bind>
+    </accept-options>
+
     <realm-name>demo</realm-name>
     <!-- Restrict cross site constraints before running in production -->
     <authorization-constraint>
@@ -81,6 +85,11 @@
         <cache-control>max-age=0</cache-control>
       </location>
     </properties>
+
+    <accept-options>
+	<tcp.bind>${http.port}</tcp.bind>
+    </accept-options>
+
     
     <cross-site-constraint>
       <allow-origin>*</allow-origin>
@@ -100,7 +109,10 @@
        <key.alias>turnshared</key.alias>
        <mapped.address>AUTO</mapped.address>
     </properties>
-    
+    <accept-options>
+	<tcp.bind>${webrtc.port}</tcp.bind>
+    </accept-options>
+
   </service>
 
 
@@ -120,6 +132,10 @@
     </properties>
 
     <realm-name>demo</realm-name>
+
+    <accept-options>
+	<tcp.bind>${http.port}</tcp.bind>
+    </accept-options>
 
     <cross-site-constraint>
       <allow-origin>*</allow-origin>

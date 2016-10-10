@@ -3,8 +3,16 @@ services:
   coturn:
     image:  dreamnetwork/coturn:4.4.5.3
     entrypoint: ["/usr/bin/turnserver", "-n", "-a", "-v", "--use-auth-secret", "--realm=demo", "--static-auth-secret=kaazshared", "--rest-api-separator=:"]
+    networks:
+      test:
+        ipv4_address: 172.18.0.7
+    dns: 172.18.0.2
   broker:
     image: kaazing/3rd-party:activemq-5.10.0
+    networks:
+      test:
+        ipv4_address: 172.18.0.6
+    dns: 172.18.0.2
   g1.kaazing.example.com:
     build: gateway
     environment:
@@ -13,6 +21,7 @@ services:
       test:
         ipv4_address: 172.18.0.4
     dns: 172.18.0.2
+    command: bin/gateway.start --config conf/gateway-config-ha.xml
   g2.kaazing.example.com:
     build: gateway
     environment:
@@ -21,6 +30,7 @@ services:
       test:
         ipv4_address: 172.18.0.5
     dns: 172.18.0.2
+    command: bin/gateway.start --config conf/gateway-config-ha.xml
   dns.example.com:
     image:   sameersbn/bind:latest
     volumes: 
