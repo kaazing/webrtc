@@ -284,7 +284,7 @@ function handleVideo(myStream) {
                     console.log("Sending offer back ");
                             if (answer == true)  {
                                 // create an offer
-                                yourConn.createOffer(function(offer) {
+                                yourConn.createOffer().then(function(offer) {
                                     console.log("Creating offer : ", offer);
                                     send({
                                         type: "offer",
@@ -294,7 +294,7 @@ function handleVideo(myStream) {
                                     yourConn.setLocalDescription(offer);
                                     
 
-                                }, function(error) {
+                                }).catch(function(error) {
                                     console.log("Error when creating an offer", error);
                                 });
                             } else {
@@ -399,7 +399,7 @@ callBtn.addEventListener("click", function() {
 
 
         // create an offer
-        yourConn.createOffer(function(offer) {
+        yourConn.createOffer().then(function(offer) {
             console.log("Creating offer : ", offer);
             send({
                 type: "offer",
@@ -407,7 +407,7 @@ callBtn.addEventListener("click", function() {
             });
 
             yourConn.setLocalDescription(offer);
-        }, function(error) {
+        }).catch(function(error) {
             console.log("Error when creating an offer", error);
         });
 
@@ -424,7 +424,7 @@ function handleOffer(offer, sender) {
     yourConn.setRemoteDescription(new RTCSessionDescription(offer));
 
     //create an answer to an offer
-    yourConn.createAnswer(function(answer) {
+    yourConn.createAnswer().then(function(answer) {
         console.log("Entering createAnswer signalling", answer);
         
         callBtn.style.display='none';
@@ -440,7 +440,7 @@ function handleOffer(offer, sender) {
         });
         console.log("Exiting createAnswer signalling");
 
-    }, function(error) {
+    }).catch(function(error) {
         console.log("Error when creating an answer", error);
     });
 
