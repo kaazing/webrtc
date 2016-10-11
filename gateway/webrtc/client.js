@@ -250,8 +250,8 @@ function handleVideo(myStream) {
     yourConn.addStream(stream);
 
     //when a remote user adds stream to the peer connection, we display it
-    yourConn.onaddstream = function(e) {
-        console.log("Entering onaddstream", e);
+    yourConn.ontrack = function(e) {
+        console.log("Entering ontrack", e);
         if (window.URL) {
             remoteVideo.src = window.URL.createObjectURL(e.stream);
         } else {
@@ -264,7 +264,7 @@ function handleVideo(myStream) {
         overlay.style.visibility='visible';
         overlay.innerText='Connected to '+connectedUser;
 
-        if (true == answerReceived) { console.log("Exiting onaddstream"); return; }
+        if (true == answerReceived) { console.log("Exiting ontrack"); return; }
 
         if (connectedUser !== undefined && connectedUser.length > 0) {
             // Usage!
@@ -308,7 +308,7 @@ function handleVideo(myStream) {
                 }
                 });
         }
-        console.log("Exiting onaddstream");
+        console.log("Exiting ontrack");
     };
 
     // Setup ice handling
@@ -486,7 +486,7 @@ function handleLeave() {
 
     yourConn.close();
     yourConn.onicecandidate = null;
-    yourConn.onaddstream = null;
+    yourConn.ontrack = null;
     startChat();
     console.log("Exiting handleLeave");
 };
