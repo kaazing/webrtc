@@ -250,8 +250,8 @@ function handleVideo(myStream) {
     yourConn.addStream(stream);
 
     //when a remote user adds stream to the peer connection, we display it
-    yourConn.onaddstream = function(e) {
-        console.log("Entering onaddstream", e);
+    yourConn.ontrack = function(e) {
+        console.log("Entering ontrack", e);
         if (window.URL) {
             remoteVideo.src = window.URL.createObjectURL(e.stream);
         } else {
@@ -264,7 +264,7 @@ function handleVideo(myStream) {
         overlay.style.visibility='visible';
         overlay.innerText='Connected to '+connectedUser;
 
-        if (true == answerReceived) { console.log("Exiting onaddstream"); return; }
+        if (true == answerReceived) { console.log("Exiting ontrack"); return; }
 
         if (connectedUser !== undefined && connectedUser.length > 0) {
             // Usage!
@@ -284,7 +284,7 @@ function handleVideo(myStream) {
                     console.log("Sending offer back ");
                             if (answer == true)  {
                                 // create an offer
-                                yourConn.createOffer(function(offer) {
+                                yourConn.createOffer().then(function(offer) {
                                     console.log("Creating offer : ", offer);
                                     send({
                                         type: "offer",
@@ -294,7 +294,7 @@ function handleVideo(myStream) {
                                     yourConn.setLocalDescription(offer);
                                     
 
-                                }, function(error) {
+                                }).catch(function(error) {
                                     console.log("Error when creating an offer", error);
                                 });
                             } else {
@@ -308,7 +308,7 @@ function handleVideo(myStream) {
                 }
                 });
         }
-        console.log("Exiting onaddstream");
+        console.log("Exiting ontrack");
     };
 
     // Setup ice handling
@@ -399,7 +399,7 @@ callBtn.addEventListener("click", function() {
 
 
         // create an offer
-        yourConn.createOffer(function(offer) {
+        yourConn.createOffer().then(function(offer) {
             console.log("Creating offer : ", offer);
             send({
                 type: "offer",
@@ -407,7 +407,7 @@ callBtn.addEventListener("click", function() {
             });
 
             yourConn.setLocalDescription(offer);
-        }, function(error) {
+        }).catch(function(error) {
             console.log("Error when creating an offer", error);
         });
 
@@ -424,7 +424,7 @@ function handleOffer(offer, sender) {
     yourConn.setRemoteDescription(new RTCSessionDescription(offer));
 
     //create an answer to an offer
-    yourConn.createAnswer(function(answer) {
+    yourConn.createAnswer().then(function(answer) {
         console.log("Entering createAnswer signalling", answer);
         
         callBtn.style.display='none';
@@ -440,7 +440,7 @@ function handleOffer(offer, sender) {
         });
         console.log("Exiting createAnswer signalling");
 
-    }, function(error) {
+    }).catch(function(error) {
         console.log("Error when creating an answer", error);
     });
 
@@ -486,7 +486,7 @@ function handleLeave() {
 
     yourConn.close();
     yourConn.onicecandidate = null;
-    yourConn.onaddstream = null;
+    yourConn.ontrack = null;
     startChat();
     console.log("Exiting handleLeave");
 };

@@ -4,7 +4,7 @@ services:
     image:  dreamnetwork/coturn:4.4.5.3
     entrypoint: ["/usr/bin/turnserver", "-n", "-a", "-v", "--use-auth-secret", "--realm=demo", "--static-auth-secret=kaazshared", "--rest-api-separator=:"]
   broker:
-    image: kaazing/3rd-party:activemq-5.10.0
+    image: webcenter/activemq:latest
   kaazing.example.com:
     build: gateway
     ports:
@@ -13,3 +13,4 @@ services:
       - "3478:3478/udp"
     environment:
     - GATEWAY_OPTS=-Dfeature.turn.proxy -Dfeature.turn.rest
+    

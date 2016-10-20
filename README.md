@@ -41,11 +41,13 @@ You can setup the same configuration but this time using [Enterprise Shield](htt
 
 0. Download and install [Kaazing WebSocket Gateway - Enterprise Edition](http://kaazing.com/download/#ee-kwg). The location you install the Gateway will be referred to as `GATEWAY_HOME`.
 
-0. Copy the contents of `REPO_HOME\gateway\conf` into `GATEWAY_HOME\conf`, being sure to replace any files that already exist. These are the configuration files that will be used by the Gateway.
+0. Copy the contents of `REPO_HOME/gateway/conf` into `GATEWAY_HOME/conf`, being sure to replace any files that already exist. These are the configuration files that will be used by the Gateway.
 
-0. Copy the `REPO_HOME\webrtc` folder to `GATEWAY_HOME\web` such that `GATEWAY_HOME\web\webrtc` is a valid path. These are the application files that will run in the browser.
+0. Copy the `REPO_HOME/webrtc` folder to `GATEWAY_HOME/web` such that `GATEWAY_HOME/web/webrtc` is a valid path. These are the application files that will run in the browser.
 
-0. Next you need the client libraries. Download the [JavaScript client libraries](https://kaazing.com/download/#client-javascript). Extract the entire contents and of the zip file and put them in `GATEWAY_HOME\web\webrtc`
+0. Create a `lib` directory in `GATEWAY_HOME/web/webrtc`.
+
+0. Next you need the client libraries. Download the [JavaScript client libraries](https://kaazing.com/download/#client-javascript). Extract the entire contents and of the zip file and put them in `GATEWAY_HOME/web/webrtc/lib`.
 
 0. Download and run a TURN server.  If you choose to use [coTURN](https://github.com/coturn/coturn/wiki/turnserver), start it with the following command:
 
