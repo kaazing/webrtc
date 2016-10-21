@@ -10,6 +10,7 @@ services:
     ports:
       - "443:443"
       - "3478:3478"
+      - "3478:3478/udp"
     environment:
     - GATEWAY_OPTS=-Dfeature.turn.proxy -Dfeature.turn.rest
   kaazing.example.com:
