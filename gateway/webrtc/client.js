@@ -6,6 +6,7 @@ var usernameInput = document.querySelector('#usernameInput');
 var passwordInput = document.querySelector('#passwordInput');
 var loginBtn = document.querySelector('#loginBtn');
 var errMessage = document.querySelector('#errMessage');
+var mediaErrMessage = document.querySelector('#mediaErrorMessage');
 
 var callPage = document.querySelector('#callPage');
 var callToUsernameInput = document.querySelector('#callToUsernameInput');
@@ -202,6 +203,10 @@ function send(message) {
 // Login when the user clicks the button
 loginBtn.addEventListener("click", function(event) {
     console.log("Entering loginBtn.click ", event);
+
+    mediaErrMessage.style.display = "none";
+    errMessage.style.display = "none";
+
     name = usernameInput.value;
 
     if (name.length <= 0) {
@@ -224,8 +229,26 @@ loginBtn.addEventListener("click", function(event) {
     console.log("Exiting loginBtn.click");
 });
 
+function showVideoPage(response) {
+
+    loginPage.style.display = "none";
+
+    //errMessage.style.display = "none";
+    callPage.style.display = "block";
+    
+    callBtn.style.display='inline';
+    callToUsernameInput.style.display='inline';
+    hangUpBtn.style.display='none';
+    overlay.style.visibility='hidden';
+
+    $('#callToUsernameInput').focus();
+}
+
 function handleVideo(myStream) {
     console.log("Entering handleVideo", myStream);
+
+    showVideoPage();
+
     stream = myStream;
 
 
@@ -320,18 +343,6 @@ function startChat() {
             console.log("Entering authorization success response handler", response);
             handleVideo.iceConfig = [ response ];
 
-            loginPage.style.display = "none";
-
-            //errMessage.style.display = "none";
-            callPage.style.display = "block";
-            
-            callBtn.style.display='inline';
-            callToUsernameInput.style.display='inline';
-            hangUpBtn.style.display='none';
-            overlay.style.visibility='hidden';
-
-            $('#callToUsernameInput').focus();
-
             //**********************
             //Starting a peer connection
             //**********************
@@ -343,7 +354,7 @@ function startChat() {
             })
             .then(handleVideo)
             .catch(function(e) {
-              alert('getUserMedia() error: ' + e.name);
+              mediaErrMessage.style.display = "block";
             });
             console.log("Exiting authorization success response handler");
         },
