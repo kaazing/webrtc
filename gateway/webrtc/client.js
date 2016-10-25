@@ -31,6 +31,7 @@ var consumer; // This is the consumer for our own JMS queue
 var conn;
 var session;
 var jmsServerURL = 'wss://kaazing.example.com:443/jms';
+var answerReceived = false;
 
 var peercon;
 if (window.mozRTCPeerConnection) {
@@ -59,6 +60,22 @@ $(document).ready(function() {
     overlay.style.visibility='hidden';
     connectToSignallingJMS();
 });
+
+function reconstructSDP (sdp) {
+    var result = [];
+
+    var lines = sdp.split("\n");
+    for (let x of lines) {
+        if (x.indexOf("candidate") > 0 && x.indexOf("relay") < 0) {
+            console.log("ELIMINATING ", x);
+            continue;
+        }
+        result.push(x);
+    }
+    let resString = result.join("\n")
+    console.log("reconstructed SDP"+ resString);
+    return resString;
+}
 
 function connectToSignallingJMS() {
     console.log("CONNECT: " + jmsServerURL);
@@ -254,20 +271,22 @@ function handleVideo(myStream) {
         overlay.style.visibility='visible';
         overlay.innerText='Connected to '+connectedUser;
 
-        if (true == answerReceived) { 
+        //if (true == answerReceived) { 
 	   if ( e.track.kind==="video") {
 		console.log("Adding video stream");
        		remoteVideo.srcObject = e.streams[0];
 	   }
 	   console.log("Exiting ontrack"); 
-	   return; 
-	}
+	   //return; 
+	//}
 
         if (connectedUser !== undefined && connectedUser.length > 0 )  { 
 	   if ( e.track.kind==="video") {
                 remoteVideo.srcObject = e.streams[0];
                 yourConn.createOffer().then(function(offer) {
-                        console.log("Creating offer : ", offer);
+                        console.log("Created offer : ", offer);
+                        var sdp = reconstructSDP (offer.sdp);
+                        offer.sdp = sdp;
                         send({
                             type: "offer",
                             offer: offer
@@ -300,6 +319,15 @@ function handleVideo(myStream) {
         }
         console.log("Exiting onicecandidate");
     };
+    
+    yourConn.oniceconnectionstatechange = function(event) {
+        if (yourConn.iceConnectionState === "failed" ||
+              yourConn.iceConnectionState === "disconnected" ||
+              yourConn.iceConnectionState === "closed") {
+            console.log("ERROR! Ice Connection called with event: ", event);
+        };
+    }
+    
     console.log("Exiting handleVideo");
 }
 
@@ -396,7 +424,7 @@ function handleOffer(offer, sender) {
  
     if ( connectedUser == null ) {
         bootbox.confirm({
-        message: "You are receiving a call from "+connectedUser, 
+        message: "You are receiving a call from "+sender, 
         buttons: {
             confirm: {
                 label: 'Answer',
@@ -445,6 +473,8 @@ function internalCreateAnswer(offer, sender ) {
         overlay.innerText='Connected to '+connectedUser;
         yourConn.setLocalDescription(answer);
 
+        var sdp = reconstructSDP (answer.sdp);
+        answer.sdp = sdp;
         send({
             type: "answer",
             answer: answer
@@ -455,7 +485,7 @@ function internalCreateAnswer(offer, sender ) {
         console.log("Error when creating an answer", error);
     });
 }
-var answerReceived = false;
+
 //when we got an answer from a remote user
 function handleAnswer(answer) {
     console.log("Entering handleAnswwer");
@@ -464,12 +494,16 @@ function handleAnswer(answer) {
     console.log("Exiting handleAnswer");
 };
 
+
 //when we got an ice candidate from a remote user
 function handleCandidate(candidate) {
     console.log("Entering handleCandidate", candidate);
-    yourConn.addIceCandidate(new RTCIceCandidate(candidate)).catch(e=>{
-	      console.log("Error: Failure during addIceCandidate()", e);
-    });;
+      if (candidate.candidate.indexOf("relay") > 0) {
+
+        yourConn.addIceCandidate(new RTCIceCandidate(candidatelines.forEach(function(x) { if (x.indexOf("candidate") > 0 ) {console.log(x);}}))).catch(e=>{
+              console.log("Error: Failure during addIceCandidate()", e, " failed: ", candidate);
+        });
+      }
     console.log("Exiting handleCandidate");
 };
 
