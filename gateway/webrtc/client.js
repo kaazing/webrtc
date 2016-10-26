@@ -218,14 +218,14 @@ loginBtn.addEventListener("click", function(event) {
     ownQueue = session.createTopic("/topic/" + name);
     console.log("Created queue : " + ownQueue);
     if (ownQueue !== '') {
-        startChat();
+        startChat(function() {
+            consumer = session.createConsumer(ownQueue);
+            console.log("SUBSCRIBED to " + ownQueue);
+            consumer.setMessageListener(function(message) {
+                handleMessage(message);
+            });
+        });
     }
-
-    consumer = session.createConsumer(ownQueue);
-    console.log("SUBSCRIBED to " + ownQueue);
-    consumer.setMessageListener(function(message) {
-        handleMessage(message);
-    });
     console.log("Exiting loginBtn.click");
 });
 
@@ -244,7 +244,7 @@ function showVideoPage(response) {
     $('#callToUsernameInput').focus();
 }
 
-function handleVideo(myStream) {
+function handleVideo(response, myStream) {
     console.log("Entering handleVideo", myStream);
 
     showVideoPage();
@@ -261,7 +261,7 @@ function handleVideo(myStream) {
 
     var configuration = {
         "iceTransportPolicy": "relay",
-        "iceServers": handleVideo.iceConfig
+        "iceServers": [ response ]
     };
 
     yourConn = new peercon(configuration);
@@ -326,11 +326,28 @@ function handleVideo(myStream) {
     console.log("Exiting handleVideo");
 }
 
-function startChat() {
+// TODO could be implemented as a Promise
+function startChat(registerMessageListenerCallback) {
     console.log("Entering startChat");
     username = usernameInput.value;
     password = passwordInput.value;
+    
+    //getting local video stream
+    navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: true
+    })
+    .then(function(myStream) {
+        negotiateChatSession(myStream, registerMessageListenerCallback);
+    })
+    .catch(function(e) {
+      mediaErrMessage.style.display = "block";
+    });
+    
+    console.log("Exiting startChat");
+}
 
+function negotiateChatSession(myStream, registerMessageListenerCallback) {
     $.ajax({
         type: "GET",
         url: "https://kaazing.example.com:443/turn.rest?service=turn",
@@ -341,30 +358,23 @@ function startChat() {
         },
         success: function(response) {
             console.log("Entering authorization success response handler", response);
-            handleVideo.iceConfig = [ response ];
+
+            //**********************
+            //Message listener can be safely registered
+            //**********************
+            registerMessageListenerCallback();
 
             //**********************
             //Starting a peer connection
             //**********************
-
-            //getting local video stream
-            navigator.mediaDevices.getUserMedia({
-              audio: true,
-              video: true
-            })
-            .then(handleVideo)
-            .catch(function(e) {
-              mediaErrMessage.style.display = "block";
-            });
+            handleVideo(response, myStream);
             console.log("Exiting authorization success response handler");
         },
         error: function() {
             errMessage.style.display = "block";
         }
     });
-    console.log("Exiting startChat");
-
-};
+}
 
 //initiating a call
 callBtn.addEventListener("click", function() {
