@@ -331,7 +331,7 @@ function startChat(registerMessageListenerCallback) {
     console.log("Entering startChat");
     username = usernameInput.value;
     password = passwordInput.value;
-    
+
     //getting local video stream
     navigator.mediaDevices.getUserMedia({
       audio: true,
@@ -370,8 +370,9 @@ function negotiateChatSession(myStream, registerMessageListenerCallback) {
             handleVideo(response, myStream);
             console.log("Exiting authorization success response handler");
         },
-        error: function() {
+        error: function(xhr, status, error) {
             errMessage.style.display = "block";
+            console.log("Authorization error. Status: " + xhr.status + ", text: " + xhr.statusText);
         }
     });
 }
