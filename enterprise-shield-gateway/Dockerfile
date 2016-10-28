@@ -1,4 +1,4 @@
-FROM kaazing/development-enterprise-gateway:5.1.3
+FROM kaazing/development-enterprise-gateway:5.1.5
 
 # Add gateway config
 COPY conf/gateway-config.xml conf/gateway-config.xml
