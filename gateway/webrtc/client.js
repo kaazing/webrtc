@@ -6,6 +6,7 @@ var usernameInput = document.querySelector('#usernameInput');
 var passwordInput = document.querySelector('#passwordInput');
 var loginBtn = document.querySelector('#loginBtn');
 var errMessage = document.querySelector('#errMessage');
+var mediaErrMessage = document.querySelector('#mediaErrorMessage');
 
 var callPage = document.querySelector('#callPage');
 var callToUsernameInput = document.querySelector('#callToUsernameInput');
@@ -202,6 +203,10 @@ function send(message) {
 // Login when the user clicks the button
 loginBtn.addEventListener("click", function(event) {
     console.log("Entering loginBtn.click ", event);
+
+    mediaErrMessage.style.display = "none";
+    errMessage.style.display = "none";
+
     name = usernameInput.value;
 
     if (name.length <= 0) {
@@ -213,19 +218,37 @@ loginBtn.addEventListener("click", function(event) {
     ownQueue = session.createTopic("/topic/" + name);
     console.log("Created queue : " + ownQueue);
     if (ownQueue !== '') {
-        startChat();
+        startChat(function() {
+            consumer = session.createConsumer(ownQueue);
+            console.log("SUBSCRIBED to " + ownQueue);
+            consumer.setMessageListener(function(message) {
+                handleMessage(message);
+            });
+        });
     }
-
-    consumer = session.createConsumer(ownQueue);
-    console.log("SUBSCRIBED to " + ownQueue);
-    consumer.setMessageListener(function(message) {
-        handleMessage(message);
-    });
     console.log("Exiting loginBtn.click");
 });
 
-function handleVideo(myStream) {
+function showVideoPage(response) {
+
+    loginPage.style.display = "none";
+
+    //errMessage.style.display = "none";
+    callPage.style.display = "block";
+    
+    callBtn.style.display='inline';
+    callToUsernameInput.style.display='inline';
+    hangUpBtn.style.display='none';
+    overlay.style.visibility='hidden';
+
+    $('#callToUsernameInput').focus();
+}
+
+function handleVideo(response, myStream) {
     console.log("Entering handleVideo", myStream);
+
+    showVideoPage();
+
     stream = myStream;
 
 
@@ -238,7 +261,7 @@ function handleVideo(myStream) {
 
     var configuration = {
         "iceTransportPolicy": "relay",
-        "iceServers": handleVideo.iceConfig
+        "iceServers": [ response ]
     };
 
     yourConn = new peercon(configuration);
@@ -303,11 +326,28 @@ function handleVideo(myStream) {
     console.log("Exiting handleVideo");
 }
 
-function startChat() {
+// TODO could be implemented as a Promise
+function startChat(registerMessageListenerCallback) {
     console.log("Entering startChat");
     username = usernameInput.value;
     password = passwordInput.value;
 
+    //getting local video stream
+    navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: true
+    })
+    .then(function(myStream) {
+        negotiateChatSession(myStream, registerMessageListenerCallback);
+    })
+    .catch(function(e) {
+      mediaErrMessage.style.display = "block";
+    });
+    
+    console.log("Exiting startChat");
+}
+
+function negotiateChatSession(myStream, registerMessageListenerCallback) {
     $.ajax({
         type: "GET",
         url: "https://kaazing.example.com:443/turn.rest?service=turn",
@@ -318,42 +358,24 @@ function startChat() {
         },
         success: function(response) {
             console.log("Entering authorization success response handler", response);
-            handleVideo.iceConfig = [ response ];
 
-            loginPage.style.display = "none";
-
-            //errMessage.style.display = "none";
-            callPage.style.display = "block";
-            
-            callBtn.style.display='inline';
-            callToUsernameInput.style.display='inline';
-            hangUpBtn.style.display='none';
-            overlay.style.visibility='hidden';
-
-            $('#callToUsernameInput').focus();
+            //**********************
+            //Message listener can be safely registered
+            //**********************
+            registerMessageListenerCallback();
 
             //**********************
             //Starting a peer connection
             //**********************
-
-            //getting local video stream
-            navigator.mediaDevices.getUserMedia({
-              audio: true,
-              video: true
-            })
-            .then(handleVideo)
-            .catch(function(e) {
-              alert('getUserMedia() error: ' + e.name);
-            });
+            handleVideo(response, myStream);
             console.log("Exiting authorization success response handler");
         },
-        error: function() {
+        error: function(xhr, status, error) {
             errMessage.style.display = "block";
+            console.log("Authorization error. Status: " + xhr.status + ", text: " + xhr.statusText);
         }
     });
-    console.log("Exiting startChat");
-
-};
+}
 
 //initiating a call
 callBtn.addEventListener("click", function() {
