@@ -35,7 +35,10 @@
 
       #errMessage {
          display: none;
-         color: red;
+      }
+
+      #mediaErrorMessage {
+         display: none;
       }
 
       #localVideo {
@@ -80,7 +83,12 @@
                required = "" autofocus = "">
             <input type = "password" id = "passwordInput" class = "form-control formgroup" placeholder = "Password"
                required = "" autofocus = "">
-            <p id = "errMessage">Unauthorized login credentials.</p>
+            <div id = "errMessage" class="alert alert-danger">
+               <strong>Error!</strong> Unauthorized login credentials.
+            </div>
+            <div id = "mediaErrorMessage" class="alert alert-danger">
+               <strong>Error!</strong> This application requires both audio and video devices enabled.
+            </div>
             <button id = "loginBtn" class = "btn btn-lg btn-primary btnblock">
                Sign in</button>
 

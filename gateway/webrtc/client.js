@@ -6,6 +6,7 @@ var usernameInput = document.querySelector('#usernameInput');
 var passwordInput = document.querySelector('#passwordInput');
 var loginBtn = document.querySelector('#loginBtn');
 var errMessage = document.querySelector('#errMessage');
+var mediaErrMessage = document.querySelector('#mediaErrorMessage');
 
 var callPage = document.querySelector('#callPage');
 var callToUsernameInput = document.querySelector('#callToUsernameInput');
@@ -61,7 +62,7 @@ $(document).ready(function() {
     connectToSignallingJMS();
 });
 
-function showInCall() {
+function inCallDisplay() {
     callBtn.style.display='none';
     callToUsernameInput.style.display='none';
     hangUpBtn.style.display='inline';
@@ -69,11 +70,12 @@ function showInCall() {
     overlay.innerText='Connected to '+connectedUser;
 }
 
-function showOffCall() {
+function disconnectedDisplay() {
     callBtn.style.display='inline';
     callToUsernameInput.style.display='inline';
     hangUpBtn.style.display='none';
     overlay.style.visibility='hidden';
+    $('#callToUsernameInput').focus();
 }
 
 function reconstructSDP (sdp) {
@@ -170,9 +172,7 @@ function handleMessage(message) {
 
 
 function send(message) {
-    /*if (yourConn.iceGatheringState == "complete") {
-        return
-    }*/
+
     var dest = session.createTopic("/topic/" + connectedUser);;
     var producer = session.createProducer(dest);
 
@@ -219,6 +219,10 @@ function send(message) {
 // Login when the user clicks the button
 loginBtn.addEventListener("click", function(event) {
     console.log("Entering loginBtn.click ", event);
+
+    mediaErrMessage.style.display = "none";
+    errMessage.style.display = "none";
+
     name = usernameInput.value;
 
     if (name.length <= 0) {
@@ -230,26 +234,37 @@ loginBtn.addEventListener("click", function(event) {
     ownQueue = session.createTopic("/topic/" + name);
     console.log("Created queue : " + ownQueue);
     if (ownQueue !== '') {
-        startChat();
+        startChat(function() {
+            consumer = session.createConsumer(ownQueue);
+            console.log("SUBSCRIBED to " + ownQueue);
+            consumer.setMessageListener(function(message) {
+                handleMessage(message);
+            });
+        });
     }
-
-    consumer = session.createConsumer(ownQueue);
-    console.log("SUBSCRIBED to " + ownQueue);
-    consumer.setMessageListener(function(message) {
-        handleMessage(message);
-    });
     console.log("Exiting loginBtn.click");
 });
 
-function handleVideo(myStream) {
+function showVideoPage(response) {
+
+    loginPage.style.display = "none";
+
+    callPage.style.display = "block";
+
+    disconnectedDisplay();
+}
+
+function handleVideo(response, myStream) {
     console.log("Entering handleVideo", myStream);
+
+    showVideoPage();
+
     stream = myStream;
     localVideo.srcObject = stream;
 
     var configuration = {
-        "iceTransportPolicy": "relay",
-        iceTransports: 'all',
-        "iceServers": handleVideo.iceConfig
+        iceTransportPolicy: "relay",
+        iceServers: [ response ]
     };
 
     yourConn = new peercon(configuration);
@@ -258,7 +273,7 @@ function handleVideo(myStream) {
     //when a remote user adds stream to the peer connection, we display it
     yourConn.ontrack = function(e) {
         console.log("Entering ontrack", e);
-        showInCall();
+        inCallDisplay();
         if ( e.track.kind==="video") {
             console.log("Adding video stream");
                 remoteVideo.srcObject = e.streams[0];
@@ -271,7 +286,7 @@ function handleVideo(myStream) {
     // Setup ice handling
     yourConn.onicecandidate = function(event) {
         console.log("Entering onicecandidate", event);
-        
+
         if (event.candidate) {
             if (event.candidate.candidate.indexOf("host") < 0) {
                 send({
@@ -280,30 +295,41 @@ function handleVideo(myStream) {
                 });
             }
         }
-        
+
         console.log("Exiting onicecandidate");
     };
-    
+
     yourConn.oniceconnectionstatechange = function(event) {
             console.log("Ice Connection State Change with event: ", event);
             console.log("Ice Connection State is now: ", yourConn.iceConnectionState);
             console.log("Ice Gathering State is now: ", yourConn.iceGatheringState);
     }
-    
-    /*yourConn.onnegotiationneeded = function () {
-        console.log("Entering yourConn.onnegotiationneeded");
-        createAndSendOffer();
-        console.log("Exiting yourConn.onnegotiationneeded");
-    }*/
-    
+
     console.log("Exiting handleVideo");
 }
 
-function startChat() {
+// TODO could be implemented as a Promise
+function startChat(registerMessageListenerCallback) {
     console.log("Entering startChat");
     username = usernameInput.value;
     password = passwordInput.value;
 
+    //getting local video stream
+    navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: true
+    })
+    .then(function(myStream) {
+        negotiateChatSession(myStream, registerMessageListenerCallback);
+    })
+    .catch(function(e) {
+      mediaErrMessage.style.display = "block";
+    });
+
+    console.log("Exiting startChat");
+}
+
+function negotiateChatSession(myStream, registerMessageListenerCallback) {
     $.ajax({
         type: "GET",
         url: "https://kaazing.example.com:443/turn.rest?service=turn",
@@ -314,39 +340,26 @@ function startChat() {
         },
         success: function(response) {
             console.log("Entering authorization success response handler", response);
-            handleVideo.iceConfig = [ response ];
 
-            loginPage.style.display = "none";
 
-            //errMessage.style.display = "none";
-            callPage.style.display = "block";
-            
-            
-            showOffCall();
-            $('#callToUsernameInput').focus();
+
+            //**********************
+            //Message listener can be safely registered
+            //**********************
+            registerMessageListenerCallback();
 
             //**********************
             //Starting a peer connection
             //**********************
-
-            //getting local video stream
-            navigator.mediaDevices.getUserMedia({
-              audio: true,
-              video: true
-            })
-            .then(handleVideo)
-            .catch(function(e) {
-              alert('getUserMedia() error: ' + e.name);
-            });
+            handleVideo(response, myStream);
             console.log("Exiting authorization success response handler");
         },
-        error: function() {
+        error: function(xhr, status, error) {
             errMessage.style.display = "block";
+            console.log("Authorization error. Status: " + xhr.status + ", text: " + xhr.statusText);
         }
     });
-    console.log("Exiting startChat");
-
-};
+}
 
 //initiating a call
 callBtn.addEventListener("click", function() {
@@ -354,10 +367,10 @@ callBtn.addEventListener("click", function() {
 
     var callToUsername = callToUsernameInput.value;
 
-    
+
     if (callToUsername.length > 0) {
         connectedUser = callToUsername;
-        showInCall();
+        inCallDisplay();
         createAndSendOffer();
     }
     console.log("Exiting callBtn.click");
@@ -378,7 +391,7 @@ function createAndSendOffer() {
         .catch(function(error) {
             console.log("Error when setting local description", error);
         });
-    })    
+    })
     .catch(function(error) {
         console.log("Error when creating an offer", error);
     });
@@ -395,7 +408,7 @@ function handleOffer(offer, sender) {
 
     if ( connectedUser == null ) {
         bootbox.confirm({
-        message: "You are receiving a call from "+sender, 
+        message: "You are receiving a call from "+sender,
         buttons: {
             confirm: {
                 label: 'Answer',
@@ -409,11 +422,11 @@ function handleOffer(offer, sender) {
         callback: function(answer) {
             console.log("User answered the call");
             connectedUser = sender;
-                    
+
                     if (answer == true)  {
                         createAndSendAnswer(offer,sender);
                     } else {
-                        showOffCall();
+                        disconnectedDisplay();
                         leave();
                     }
         }
@@ -431,7 +444,7 @@ function createAndSendAnswer(offer, sender ) {
     yourConn.createAnswer()
     .then(function(answer) {
         console.log("Entering createAnswer signalling", answer);
-        showInCall();
+        inCallDisplay();
         yourConn.setLocalDescription(new RTCSessionDescription(answer))
         .then(function () {
             var sdp = reconstructSDP (answer.sdp);
@@ -457,8 +470,8 @@ function createAndSendAnswer(offer, sender ) {
 function handleAnswer(answer) {
     console.log("Entering handleAnswwer");
     yourConn.setRemoteDescription(answer)
-    .catch(function (e) { 
-        console.log("Error when setting remote description", e); 
+    .catch(function (e) {
+        console.log("Error when setting remote description", e);
     });
 
     answerReceived = true;
@@ -492,7 +505,7 @@ function handleLeave() {
     console.log("Entering handleLeave");
     connectedUser = null;
     remoteVideo.srcObject = null;
-    showOffCall();
+    disconnectedDisplay();
     answerReceived = false;
     bootbox.hideAll()
 
