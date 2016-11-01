@@ -104,3 +104,26 @@ You can setup the same configuration but this time using [Enterprise Shield](htt
 0. Open a second browser tab at [https://kaazing.example.com/demo/](https://kaazing.example.com/demo/) and log in with username **alice** and password **alice**.
 
 0. From the **alice** tab, you can now call bob.
+
+
+##### Running High Availability (Optional)
+
+You can setup the same configuration in a high-availability configuration. High-availability is created at the DNS level. 
+
+**Note:** This set-up can only be done from docker on a linux machine
+
+0.  Stop all docker containers from previous demo
+
+0.  Run `docker-compose -f docker-compose-ha.yml up --build`
+
+0.  Set-up your network adapter to use as alternate DNS the IP address of the DNS container: 172.18.0.2
+
+0.  Remove any mention to kaazing.example.com or any other "example.com" from the /etc/hosts file
+
+0.  You may now connect to https://kaazing.example.com which will be resolved via DNS to either one of the two containers.
+
+Additional notes:
+
+  - The BIND dns server has the webmin interface set-up. You can access it on 172.18.0.2:10000. The username is 'root' and the password is 'password'.
+  - The BIND dns server has an additional DNS the server 172.30.201.2. If your network uses a different one, you may modify the file dns/data/bind/etc/named.conf with the proper IP.
+  - The demo creates 2 gateways but only one coturn and one broker. Shutting down either of the gateways will nevertheless allow access to the website, but the browser will have to be refreshed.
