@@ -6,6 +6,7 @@ var usernameInput = document.querySelector('#usernameInput');
 var passwordInput = document.querySelector('#passwordInput');
 var loginBtn = document.querySelector('#loginBtn');
 var errMessage = document.querySelector('#errMessage');
+var mediaErrMessage = document.querySelector('#mediaErrorMessage');
 
 var callPage = document.querySelector('#callPage');
 var callToUsernameInput = document.querySelector('#callToUsernameInput');
@@ -202,6 +203,10 @@ function send(message) {
 // Login when the user clicks the button
 loginBtn.addEventListener("click", function(event) {
     console.log("Entering loginBtn.click ", event);
+
+    mediaErrMessage.style.display = "none";
+    errMessage.style.display = "none";
+
     name = usernameInput.value;
 
     if (name.length <= 0) {
@@ -213,22 +218,39 @@ loginBtn.addEventListener("click", function(event) {
     ownQueue = session.createTopic("/topic/" + name);
     console.log("Created queue : " + ownQueue);
     if (ownQueue !== '') {
-        startChat();
+        startChat(function() {
+            consumer = session.createConsumer(ownQueue);
+            console.log("SUBSCRIBED to " + ownQueue);
+            consumer.setMessageListener(function(message) {
+                handleMessage(message);
+            });
+        });
     }
-
-    consumer = session.createConsumer(ownQueue);
-    console.log("SUBSCRIBED to " + ownQueue);
-    consumer.setMessageListener(function(message) {
-        handleMessage(message);
-    });
     console.log("Exiting loginBtn.click");
 });
 
-function handleVideo(myStream) {
+function showVideoPage(response) {
+
+    loginPage.style.display = "none";
+
+    //errMessage.style.display = "none";
+    callPage.style.display = "block";
+    
+    callBtn.style.display='inline';
+    callToUsernameInput.style.display='inline';
+    hangUpBtn.style.display='none';
+    overlay.style.visibility='hidden';
+
+    $('#callToUsernameInput').focus();
+}
+
+function handleVideo(response, myStream) {
     console.log("Entering handleVideo", myStream);
+
+    showVideoPage();
+
     stream = myStream;
 
-    console.log("debug : 1");
 
     //displaying local video stream on the page
     if (window.URL) {
@@ -239,24 +261,15 @@ function handleVideo(myStream) {
 
     var configuration = {
         "iceTransportPolicy": "relay",
-        "iceServers": handleVideo.iceConfig
+        "iceServers": [ response ]
     };
 
-    console.log("debug : 2");
     yourConn = new peercon(configuration);
-    console.log("debug : 3");
 
     // setup stream listening
-    yourConn.addStream(stream);
-
     //when a remote user adds stream to the peer connection, we display it
-    yourConn.onaddstream = function(e) {
-        console.log("Entering onaddstream", e);
-        if (window.URL) {
-            remoteVideo.src = window.URL.createObjectURL(e.stream);
-        } else {
-            remoteVideo.src = e.stream;
-        }
+    yourConn.ontrack = function(e) {
+        console.log("Entering ontrack", e);
         
         callBtn.style.display='none';
         callToUsernameInput.style.display='none';
@@ -264,53 +277,38 @@ function handleVideo(myStream) {
         overlay.style.visibility='visible';
         overlay.innerText='Connected to '+connectedUser;
 
-        if (true == answerReceived) { console.log("Exiting onaddstream"); return; }
+        if (true == answerReceived) { 
+	   if ( e.track.kind==="video") {
+		console.log("Adding video stream");
+       		remoteVideo.srcObject = e.streams[0];
+	   }
+	   console.log("Exiting ontrack"); 
+	   return; 
+	}
 
-        if (connectedUser !== undefined && connectedUser.length > 0) {
-            // Usage!
-             bootbox.confirm({
-                message: "You are receiving a call from "+connectedUser, 
-                buttons: {
-                    confirm: {
-                        label: 'Answer',
-                        className: 'btn-success'
-                    },
-                    cancel: {
-                        label: 'Hang Up',
-                        className: 'btn-danger'
-                    }
-                },
-                callback: function(answer) {
-                    console.log("Sending offer back ");
-                            if (answer == true)  {
-                                // create an offer
-                                yourConn.createOffer(function(offer) {
-                                    console.log("Creating offer : ", offer);
-                                    send({
-                                        type: "offer",
-                                        offer: offer
-                                    });
+        if (connectedUser !== undefined && connectedUser.length > 0 )  { 
+	   if ( e.track.kind==="video") {
+                remoteVideo.srcObject = e.streams[0];
+                yourConn.createOffer().then(function(offer) {
+                        console.log("Creating offer : ", offer);
+                        send({
+                            type: "offer",
+                            offer: offer
+                        });
 
-                                    yourConn.setLocalDescription(offer);
-                                    
+                        yourConn.setLocalDescription(offer);
+                        
 
-                                }, function(error) {
-                                    console.log("Error when creating an offer", error);
-                                });
-                            } else {
-                                callBtn.style.display='inline';
-                                callToUsernameInput.style.display='inline';
-                                overlay.style.visibility='hidden';
-                                hangUpBtn.style.display='none';
-                                
-                                leave();
-                            }
-                }
-                });
-        }
-        console.log("Exiting onaddstream");
+                    }).catch(function(error) {
+                        console.log("Error when creating an offer", error);
+                    });
+       } 
+	} 
+        console.log("Exiting ontrack");
     };
 
+    yourConn.addStream(stream);
+    //stream.getTracks().forEach(track => yourConn.addTrack(track, stream));
     // Setup ice handling
     yourConn.onicecandidate = function(event) {
         console.log("Entering onicecandidate", event);
@@ -328,11 +326,28 @@ function handleVideo(myStream) {
     console.log("Exiting handleVideo");
 }
 
-function startChat() {
+// TODO could be implemented as a Promise
+function startChat(registerMessageListenerCallback) {
     console.log("Entering startChat");
     username = usernameInput.value;
     password = passwordInput.value;
 
+    //getting local video stream
+    navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: true
+    })
+    .then(function(myStream) {
+        negotiateChatSession(myStream, registerMessageListenerCallback);
+    })
+    .catch(function(e) {
+      mediaErrMessage.style.display = "block";
+    });
+    
+    console.log("Exiting startChat");
+}
+
+function negotiateChatSession(myStream, registerMessageListenerCallback) {
     $.ajax({
         type: "GET",
         url: "https://kaazing.example.com:443/turn.rest?service=turn",
@@ -343,42 +358,24 @@ function startChat() {
         },
         success: function(response) {
             console.log("Entering authorization success response handler", response);
-            handleVideo.iceConfig = [ response ];
 
-            loginPage.style.display = "none";
-
-            //errMessage.style.display = "none";
-            callPage.style.display = "block";
-            
-            callBtn.style.display='inline';
-            callToUsernameInput.style.display='inline';
-            hangUpBtn.style.display='none';
-            overlay.style.visibility='hidden';
-
-            $('#callToUsernameInput').focus();
+            //**********************
+            //Message listener can be safely registered
+            //**********************
+            registerMessageListenerCallback();
 
             //**********************
             //Starting a peer connection
             //**********************
-
-            //getting local video stream
-            navigator.mediaDevices.getUserMedia({
-              audio: true,
-              video: true
-            })
-            .then(handleVideo)
-            .catch(function(e) {
-              alert('getUserMedia() error: ' + e.name);
-            });
+            handleVideo(response, myStream);
             console.log("Exiting authorization success response handler");
         },
-        error: function() {
+        error: function(xhr, status, error) {
             errMessage.style.display = "block";
+            console.log("Authorization error. Status: " + xhr.status + ", text: " + xhr.statusText);
         }
     });
-    console.log("Exiting startChat");
-
-};
+}
 
 //initiating a call
 callBtn.addEventListener("click", function() {
@@ -399,7 +396,7 @@ callBtn.addEventListener("click", function() {
 
 
         // create an offer
-        yourConn.createOffer(function(offer) {
+        yourConn.createOffer().then(function(offer) {
             console.log("Creating offer : ", offer);
             send({
                 type: "offer",
@@ -407,7 +404,7 @@ callBtn.addEventListener("click", function() {
             });
 
             yourConn.setLocalDescription(offer);
-        }, function(error) {
+        }).catch(function(error) {
             console.log("Error when creating an offer", error);
         });
 
@@ -418,13 +415,49 @@ callBtn.addEventListener("click", function() {
 //when somebody sends us an offer
 function handleOffer(offer, sender) {
     console.log("Entering handleOffer", offer, sender);
-    connectedUser = sender;
-    remoteVideo.src = null;
-    startChat();
-    yourConn.setRemoteDescription(new RTCSessionDescription(offer));
+ 
+    if ( connectedUser == null ) {
+        bootbox.confirm({
+        message: "You are receiving a call from "+connectedUser, 
+        buttons: {
+            confirm: {
+                label: 'Answer',
+                className: 'btn-success'
+            },
+            cancel: {
+                label: 'Hang Up',
+                className: 'btn-danger'
+            }
+        },
+        callback: function(answer) {
+            console.log("User answered the call");
+            connectedUser = sender;
+            remoteVideo.srcObject = null;
+                    
+                    if (answer == true)  {
+                        internalCreateAnswer(offer,sender);
+                    } else {
+                        callBtn.style.display='inline';
+                        callToUsernameInput.style.display='inline';
+                        overlay.style.visibility='hidden';
+                        hangUpBtn.style.display='none';
+                        
+                        leave();
+                    }
+        }
+        });
+    } else {
+        internalCreateAnswer(offer,sender);
+    }
+    console.log("Exiting handleOffer");
+};
+
+function internalCreateAnswer(offer, sender ) {
+
+    yourConn.setRemoteDescription(new RTCSessionDescription(offer)).catch(function (e) { console.log("Remote error", e) ;});
 
     //create an answer to an offer
-    yourConn.createAnswer(function(answer) {
+    yourConn.createAnswer().then(function(answer) {
         console.log("Entering createAnswer signalling", answer);
         
         callBtn.style.display='none';
@@ -440,18 +473,15 @@ function handleOffer(offer, sender) {
         });
         console.log("Exiting createAnswer signalling");
 
-    }, function(error) {
+    }).catch(function(error) {
         console.log("Error when creating an answer", error);
     });
-
-    console.log("Exiting handleOffer");
-};
-
+}
 var answerReceived = false;
 //when we got an answer from a remote user
 function handleAnswer(answer) {
     console.log("Entering handleAnswwer");
-    yourConn.setRemoteDescription(new RTCSessionDescription(answer));
+    yourConn.setRemoteDescription(new RTCSessionDescription(answer)).catch(function (e) { console.log("Remote error", e); });
     answerReceived = true;
     console.log("Exiting handleAnswer");
 };
@@ -459,7 +489,9 @@ function handleAnswer(answer) {
 //when we got an ice candidate from a remote user
 function handleCandidate(candidate) {
     console.log("Entering handleCandidate", candidate);
-    yourConn.addIceCandidate(new RTCIceCandidate(candidate));
+    yourConn.addIceCandidate(new RTCIceCandidate(candidate)).catch(e=>{
+	      console.log("Error: Failure during addIceCandidate()", e);
+    });;
     console.log("Exiting handleCandidate");
 };
 
@@ -476,7 +508,7 @@ function leave() {
 function handleLeave() {
     console.log("Entering handleLeave");
     connectedUser = null;
-    remoteVideo.src = null;
+    remoteVideo.srcObject = null;
     callBtn.style.display='inline';
     callToUsernameInput.style.display='inline';
     hangUpBtn.style.display='none';
@@ -486,7 +518,7 @@ function handleLeave() {
 
     yourConn.close();
     yourConn.onicecandidate = null;
-    yourConn.onaddstream = null;
+    yourConn.ontrack = null;
     startChat();
     console.log("Exiting handleLeave");
 };

@@ -3,7 +3,8 @@
    <head>
       <title>Kaazing WebRTC Video Demo</title>
       <link rel = "stylesheet" href = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous"/>
-      <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+      <!--<script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>-->
+      <script src="https://webrtc.github.io/adapter/adapter-2.0.4.js"></script>
       <script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
       <script src="lib/WebSocket.js"></script>
       <script src="lib/JmsClient.js"></script>
@@ -34,7 +35,10 @@
 
       #errMessage {
          display: none;
-         color: red;
+      }
+
+      #mediaErrorMessage {
+         display: none;
       }
 
       #localVideo {
@@ -52,15 +56,16 @@
 
        #overlay {
           position: absolute; 
-          top: 15px; 
+          top: 8px; 
           left: 0px; 
           color: #FFF; 
           text-align: center;
-          font-size: 10px;
+          font-size: 12px;
           background-color: rgba(221, 221, 221, 0.3);
-          width: 640px;
+          width: 200px;
           padding: 10px 0;
           z-index: 2147483647;
+          font-weight: 800;
       }
       
    </style>
@@ -78,7 +83,12 @@
                required = "" autofocus = "">
             <input type = "password" id = "passwordInput" class = "form-control formgroup" placeholder = "Password"
                required = "" autofocus = "">
-            <p id = "errMessage">Unauthorized login credentials.</p>
+            <div id = "errMessage" class="alert alert-danger">
+               <strong>Error!</strong> Unauthorized login credentials.
+            </div>
+            <div id = "mediaErrorMessage" class="alert alert-danger">
+               <strong>Error!</strong> This application requires both audio and video devices enabled.
+            </div>
             <button id = "loginBtn" class = "btn btn-lg btn-primary btnblock">
                Sign in</button>
 

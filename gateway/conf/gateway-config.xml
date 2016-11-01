@@ -107,7 +107,6 @@
 
     <properties>
        <key.alias>turnshared</key.alias>
-       <mapped.address>AUTO</mapped.address>
     </properties>
     <accept-options>
 	<tcp.bind>${webrtc.port}</tcp.bind>
