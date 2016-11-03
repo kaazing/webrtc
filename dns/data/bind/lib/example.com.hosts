@@ -1,6 +1,6 @@
 $ttl 38400
 example.com.	IN	SOA	883951e96a11. dorumihai_muntean.kaazing.com. (
-			1475677568
+			1475677569
 			10800
 			3600
 			604800
@@ -10,3 +10,4 @@ kaazing.example.com.	IN	A	172.18.0.4
 kaazing.example.com.	IN	A	172.18.0.5
 coturn.example.com.	IN	A	172.18.0.7
 broker.example.com.	IN	A	172.18.0.6
+coturn.example.com.	IN	A	172.18.0.8
