@@ -1,12 +1,19 @@
 version: '2'
 services:
-  coturn:
+  coturn1.example.com:
     image:  dreamnetwork/coturn:4.4.5.3
     entrypoint: ["/usr/bin/turnserver", "-n", "-a", "-v", "--use-auth-secret", "--realm=demo", "--static-auth-secret=kaazshared", "--rest-api-separator=:"]
     networks:
       test:
         ipv4_address: 172.18.0.7
     dns: 172.18.0.2
+  coturn2.example.com:
+    image:  dreamnetwork/coturn:4.4.5.3
+    entrypoint: ["/usr/bin/turnserver", "-n", "-a", "-v", "--use-auth-secret", "--realm=demo", "--static-auth-secret=kaazshared", "--rest-api-separator=:"]
+    networks:
+      test:
+        ipv4_address: 172.18.0.8
+    dns: 172.18.0.2    
   broker:
     image: webcenter/activemq:latest
     networks:
