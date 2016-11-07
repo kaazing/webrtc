@@ -9,6 +9,7 @@ ADD http://central.maven.org/maven2/org/fusesource/hawtbuf/hawtbuf/1.11/hawtbuf-
 # Add gateway config
 COPY conf/gateway-config.xml conf/gateway-config.xml
 COPY conf/gateway-config-es.xml conf/gateway-config-es.xml
+COPY conf/gateway-config-ha.xml conf/gateway-config-ha.xml
 COPY conf/keystore.db conf/keystore.db
 COPY conf/truststore.db conf/truststore.db
 COPY conf/jaas-config.xml conf/jaas-config.xml

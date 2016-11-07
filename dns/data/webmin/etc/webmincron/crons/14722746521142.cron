@@ -1,0 +1,4 @@
+interval=3600
+func=cleanup_temp_files
+id=14722746521142
+module=cron

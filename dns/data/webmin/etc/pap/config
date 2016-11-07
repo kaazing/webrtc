@@ -1,0 +1,8 @@
+pap_file=/etc/ppp/pap-secrets
+pppd=pppd
+mgetty=mgetty
+serials=/dev/ttyS[0-9]*
+login_config=/etc/mgetty+sendfax/login.config
+ppp_options=/etc/ppp/options
+encrypt_pass=0
+dialin_config=/etc/mgetty+sendfax/dialin.config
