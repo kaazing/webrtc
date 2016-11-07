@@ -23,6 +23,7 @@ var modifySDP = document.querySelector('#modifySDP');
 var yourConn;
 var stream;
 var ownQueue;
+var configuration;
 
 callPage.style.display = "none";
 var name; //our username
@@ -255,19 +256,8 @@ function showVideoPage(response) {
     disconnectedDisplay();
 }
 
-function handleVideo(response, myStream) {
-    console.log("Entering handleVideo", myStream);
-
-    showVideoPage();
-
-    stream = myStream;
-    localVideo.srcObject = stream;
-
-    var configuration = {
-        iceTransportPolicy: "relay",
-        iceServers: [ response ]
-    };
-
+function configureConnection() {
+    console.log("Entering configureConnection", configuration);
     yourConn = new peercon(configuration);
 
     // setup stream listening
@@ -277,7 +267,7 @@ function handleVideo(response, myStream) {
         inCallDisplay();
         if ( e.track.kind==="video") {
             console.log("Adding video stream");
-                remoteVideo.srcObject = e.streams[0];
+            remoteVideo.srcObject = e.streams[0];
         }
         console.log("Exiting ontrack");
     };
@@ -306,13 +296,29 @@ function handleVideo(response, myStream) {
 
         console.log("Exiting onicecandidate");
     };
-
     yourConn.oniceconnectionstatechange = function(event) {
             console.log("Ice Connection State Change with event: ", event);
             console.log("Ice Connection State is now: ", yourConn.iceConnectionState);
             console.log("Ice Gathering State is now: ", yourConn.iceGatheringState);
     }
+    console.log("Exiting configureConnection");
+}
 
+function handleVideo(response, myStream) {
+    console.log("Entering handleVideo", myStream);
+
+    showVideoPage();
+    stream = myStream;
+
+    //displaying local video stream on the page
+    localVideo.srcObject = stream;
+
+    configuration = {
+        iceTransportPolicy: "relay",
+        iceServers: [ response ]
+    };
+
+    configureConnection();
     console.log("Exiting handleVideo");
 }
 
@@ -483,7 +489,6 @@ function handleAnswer(answer) {
     .catch(function (e) {
         console.log("Error when setting remote description", e);
     });
-
     answerReceived = true;
     console.log("Exiting handleAnswer");
 };
@@ -522,6 +527,6 @@ function handleLeave() {
     yourConn.close();
     yourConn.onicecandidate = null;
     yourConn.ontrack = null;
-    startChat();
+    configureConnection();
     console.log("Exiting handleLeave");
 };
