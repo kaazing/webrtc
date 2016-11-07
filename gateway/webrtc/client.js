@@ -22,6 +22,7 @@ var overlay = document.querySelector('#overlay');
 var yourConn;
 var stream;
 var ownQueue;
+var configuration;
 
 callPage.style.display = "none";
 var name; //our username
@@ -244,26 +245,8 @@ function showVideoPage(response) {
     $('#callToUsernameInput').focus();
 }
 
-function handleVideo(response, myStream) {
-    console.log("Entering handleVideo", myStream);
-
-    showVideoPage();
-
-    stream = myStream;
-
-
-    //displaying local video stream on the page
-    if (window.URL) {
-        localVideo.src = window.URL.createObjectURL(stream);
-    } else {
-        localVideo.src = stream;
-    }
-
-    var configuration = {
-        "iceTransportPolicy": "relay",
-        "iceServers": [ response ]
-    };
-
+function configureConnection() {
+    console.log("Entering configureConnection", configuration);
     yourConn = new peercon(configuration);
 
     // setup stream listening
@@ -278,32 +261,31 @@ function handleVideo(response, myStream) {
         overlay.innerText='Connected to '+connectedUser;
 
         if (true == answerReceived) { 
-	   if ( e.track.kind==="video") {
-		console.log("Adding video stream");
-       		remoteVideo.srcObject = e.streams[0];
-	   }
-	   console.log("Exiting ontrack"); 
-	   return; 
-	}
+            if ( e.track.kind==="video") {
+                console.log("Adding video stream");
+                remoteVideo.srcObject = e.streams[0];
+            }
+            console.log("Exiting ontrack");
+            return;
+        }
 
-        if (connectedUser !== undefined && connectedUser.length > 0 )  { 
-	   if ( e.track.kind==="video") {
+        if (connectedUser !== undefined && connectedUser.length > 0 )  {
+            if ( e.track.kind==="video") {
                 remoteVideo.srcObject = e.streams[0];
                 yourConn.createOffer().then(function(offer) {
-                        console.log("Creating offer : ", offer);
-                        send({
-                            type: "offer",
-                            offer: offer
-                        });
-
-                        yourConn.setLocalDescription(offer);
-                        
-
-                    }).catch(function(error) {
-                        console.log("Error when creating an offer", error);
+                    console.log("Creating offer : ", offer);
+                    send({
+                        type: "offer",
+                        offer: offer
                     });
-       } 
-	} 
+
+                    yourConn.setLocalDescription(offer);
+
+                }).catch(function(error) {
+                    console.log("Error when creating an offer", error);
+                });
+            }
+        }
         console.log("Exiting ontrack");
     };
 
@@ -323,6 +305,30 @@ function handleVideo(response, myStream) {
         }
         console.log("Exiting onicecandidate");
     };
+    console.log("Exiting configureConnection");
+}
+
+function handleVideo(response, myStream) {
+    console.log("Entering handleVideo", myStream);
+
+    showVideoPage();
+
+    stream = myStream;
+
+    //displaying local video stream on the page
+    if (window.URL) {
+        localVideo.src = window.URL.createObjectURL(stream);
+    } else {
+        localVideo.src = stream;
+    }
+
+    configuration = {
+        iceTransportPolicy: "relay",
+        iceServers: [ response ]
+    };
+
+    configureConnection();
+
     console.log("Exiting handleVideo");
 }
 
@@ -480,7 +486,7 @@ function internalCreateAnswer(offer, sender ) {
 var answerReceived = false;
 //when we got an answer from a remote user
 function handleAnswer(answer) {
-    console.log("Entering handleAnswwer");
+    console.log("Entering handleAnswer");
     yourConn.setRemoteDescription(new RTCSessionDescription(answer)).catch(function (e) { console.log("Remote error", e); });
     answerReceived = true;
     console.log("Exiting handleAnswer");
@@ -519,6 +525,6 @@ function handleLeave() {
     yourConn.close();
     yourConn.onicecandidate = null;
     yourConn.ontrack = null;
-    startChat();
+    configureConnection();
     console.log("Exiting handleLeave");
 };
