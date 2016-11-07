@@ -18,6 +18,7 @@ var localVideo = document.querySelector('#localVideo');
 var remoteVideo = document.querySelector('#remoteVideo');
 
 var overlay = document.querySelector('#overlay');
+var modifySDP = document.querySelector('#modifySDP');
 
 var yourConn;
 var stream;
@@ -90,7 +91,7 @@ function reconstructSDP (sdp) {
         result.push(x);
     }
     let resString = result.join("\n")
-    console.log("reconstructed SDP"+ resString);
+    console.log("reconstructed SDP: "+ resString);
     return resString;
 }
 
@@ -288,10 +289,17 @@ function handleVideo(response, myStream) {
         console.log("Entering onicecandidate", event);
 
         if (event.candidate) {
-            if (event.candidate.candidate.indexOf("host") < 0) {
+            if (modifySDP.checked == true) {
+                if (event.candidate.candidate.indexOf("host") < 0) {
+                    send({
+                        type: "candidate",
+                        candidate: new RTCIceCandidate(event.candidate)
+                    });
+                }
+            } else {
                 send({
-                    type: "candidate",
-                    candidate: new RTCIceCandidate(event.candidate)
+                        type: "candidate",
+                        candidate: new RTCIceCandidate(event.candidate)
                 });
             }
         }
@@ -447,8 +455,10 @@ function createAndSendAnswer(offer, sender ) {
         inCallDisplay();
         yourConn.setLocalDescription(new RTCSessionDescription(answer))
         .then(function () {
-            var sdp = reconstructSDP (answer.sdp);
-            answer.sdp = sdp;
+            if (modifySDP.checked == true) {
+                var sdp = reconstructSDP (answer.sdp);
+                answer.sdp = sdp;
+            }
             send({
                 type: "answer",
                 answer: answer
