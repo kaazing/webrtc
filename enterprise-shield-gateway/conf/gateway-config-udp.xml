@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+
+    Copyright 2007-2016, Kaazing Corporation. All rights reserved.
+
+-->
+<gateway-config xmlns="http://xmlns.kaazing.org/2015/11/gateway">
+
+  <!--
+  #############################################################################
+  #############################################################################
+
+                Kaazing WebSocket Gateway Configuration File
+
+    See Kaazing Documentation for details: http://kaazing.com/documentation
+
+  #############################################################################
+  #############################################################################
+  -->
+
+  <properties>
+
+    <property>
+      <name>gateway.hostname</name>
+      <value>shield.example.com</value>
+    </property>
+
+    <property>
+      <name>backend.hostname</name>
+      <value>kaazing.example.com</value>
+    </property>
+
+    <property>
+      <name>http.port</name>
+      <value>443</value>
+    </property>
+
+    <property>
+      <name>webrtc.port</name>
+      <value>3478</value>
+    </property>
+
+  </properties>
+
+  <service>
+    <name>http.shield</name>
+    <description>Shield for http services</description>
+    <accept>tcp://${gateway.hostname}:${http.port}</accept>
+    <connect>tcp://${backend.hostname}:${http.port}</connect>
+
+    <type>proxy</type>
+
+    <connect-options>
+      <tcp.transport>socks://${gateway.hostname}:1080</tcp.transport>
+      <socks.mode>reverse</socks.mode>
+      <socks.timeout>2 seconds</socks.timeout>
+      <socks.transport>wsn://${gateway.hostname}:1080/http.shield</socks.transport>
+      <ws.inactivity.timeout>60 seconds</ws.inactivity.timeout>
+    </connect-options>
+
+  </service>
+
+  <service>
+    <name>turn.shield</name>
+    <description>Shield for http services</description>
+    <accept>udp://${gateway.hostname}:${webrtc.port}</accept>
+    <connect>udp://${backend.hostname}:${webrtc.port}</connect>
+
+    <type>proxy</type>
+
+    <connect-options>
+      <udp.transport>socks://${gateway.hostname}:1080</udp.transport>
+      <socks.mode>reverse</socks.mode>
+      <socks.timeout>2 seconds</socks.timeout>
+      <socks.transport>wsn://${gateway.hostname}:1080/webrtc.shield</socks.transport>
+      <ws.inactivity.timeout>60 seconds</ws.inactivity.timeout>
+    </connect-options>
+
+  </service>
+
+  <security>
+    <keystore>
+      <type>JCEKS</type>
+      <file>keystore.db</file>
+      <password-file>keystore.pw</password-file>
+    </keystore>
+
+    <truststore>
+      <file>truststore.db</file>
+    </truststore>
+
+    <realm>
+      <name>demo</name>
+      <description>Sample realm for file-based authentication</description>
+
+      <authentication>
+        <http-challenge-scheme>Basic</http-challenge-scheme>
+        <login-modules>
+          <login-module>
+            <type>file</type>
+            <success>required</success>
+            <options>
+              <file>jaas-config.xml</file>
+            </options>
+          </login-module>
+        </login-modules>
+      </authentication>
+    </realm>
+
+  </security>
+
+
+</gateway-config>

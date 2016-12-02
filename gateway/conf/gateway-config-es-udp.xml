@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+
+    Copyright 2007-2016, Kaazing Corporation. All rights reserved.
+
+-->
+<gateway-config xmlns="http://xmlns.kaazing.org/2015/11/gateway">
+
+  <!--
+  #############################################################################
+  #############################################################################
+
+                Kaazing WebSocket Gateway Configuration File
+
+    See Kaazing Documentation for details: http://kaazing.com/documentation
+
+  #############################################################################
+  #############################################################################
+  -->
+
+  <properties>
+
+    <property>
+      <name>gateway.hostname</name>
+      <value>kaazing.example.com</value>
+    </property>
+
+    <property>
+      <name>frontend.hostname</name>
+      <value>shield.example.com</value>
+    </property>
+
+    <property>
+      <name>http.port</name>
+      <value>443</value>
+    </property>
+
+    <property>
+      <name>webrtc.port</name>
+      <value>3478</value>
+    </property>
+
+  </properties>
+
+  <service>
+    <name>turn.rest</name>
+    <description>TURN Rest Service</description>
+    <accept>https://${gateway.hostname}:${http.port}/turn.rest</accept>
+
+    <type>turn.rest</type>
+
+    <properties>
+      <key.alias>turnshared</key.alias>
+      <key.algorithm>HmacSHA1</key.algorithm>
+      <credentials.generator>class:org.kaazing.gateway.service.turn.rest.DefaultCredentialsGenerator</credentials.generator>
+      <credentials.ttl>22400</credentials.ttl>
+      <username.separator>:</username.separator>
+      <url>turn:${gateway.hostname}:${webrtc.port}?transport=udp</url>
+    </properties>
+
+    <accept-options>
+      <tcp.transport>socks://${frontend.hostname}:1080</tcp.transport>
+      <socks.mode>reverse</socks.mode>
+      <socks.transport>wsn://${frontend.hostname}:1080/http.shield</socks.transport>
+      <ws.inactivity.timeout>60 seconds</ws.inactivity.timeout>
+    </accept-options>
+	
+
+    <realm-name>demo</realm-name>
+    <!-- Restrict cross site constraints before running in production -->
+    <authorization-constraint>
+      <require-role>AUTHORIZED</require-role>
+    </authorization-constraint>
+
+    <cross-site-constraint>
+      <allow-origin>*</allow-origin>
+    </cross-site-constraint>
+
+  </service>
+  
+  <service>
+    <name>webrtc</name>
+    <description>Directory service for WebRTC</description>
+    <accept>https://${gateway.hostname}:${http.port}/demo</accept>
+    <type>directory</type>
+
+    <properties>
+      <directory>/webrtc</directory>
+      <welcome-file>index.html</welcome-file>
+      <error-pages-directory>/error-pages</error-pages-directory>
+      <options>indexes</options>
+      <location>
+        <patterns>**/*</patterns>
+        <cache-control>max-age=0</cache-control>
+      </location>
+    </properties>
+
+    <accept-options>
+      <tcp.transport>socks://${frontend.hostname}:1080</tcp.transport>
+      <socks.mode>reverse</socks.mode>
+      <socks.transport>wsn://${frontend.hostname}:1080/http.shield</socks.transport>
+      <ws.inactivity.timeout>60 seconds</ws.inactivity.timeout>
+    </accept-options>
+    
+    <cross-site-constraint>
+      <allow-origin>*</allow-origin>
+    </cross-site-constraint>
+  </service>
+
+  <service>
+    <name>turn.proxy</name>
+    <description>TURN Proxy Service</description>
+    <accept>udp://${gateway.hostname}:${webrtc.port}</accept>
+    <connect>udp://coturn:3478</connect>
+    
+    <type>turn.proxy</type>
+
+    <properties>
+       <key.alias>turnshared</key.alias>
+    </properties>
+
+    <accept-options>
+      <udp.transport>socks://${frontend.hostname}:1080</udp.transport>
+      <socks.mode>reverse</socks.mode>
+      <socks.transport>wsn://${frontend.hostname}:1080/webrtc.shield</socks.transport>
+      <ws.inactivity.timeout>60 seconds</ws.inactivity.timeout>
+    </accept-options>   
+ 
+  </service>
+
+
+
+  <service>
+    <name>JMS Service</name>
+    <accept>wss://${gateway.hostname}:${http.port}/jms</accept>
+
+    <type>jms</type>
+
+    <properties>
+      <connection.factory.name>ConnectionFactory</connection.factory.name>
+      <context.lookup.topic.format>dynamicTopics/%s</context.lookup.topic.format>
+      <context.lookup.queue.format>dynamicQueues/%s</context.lookup.queue.format>
+      <env.java.naming.factory.initial>org.apache.activemq.jndi.ActiveMQInitialContextFactory</env.java.naming.factory.initial>
+      <env.java.naming.provider.url>tcp://broker:61616</env.java.naming.provider.url>
+    </properties>
+
+
+    <accept-options>
+      <tcp.transport>socks://${frontend.hostname}:1080</tcp.transport>
+      <socks.mode>reverse</socks.mode>
+      <socks.transport>wsn://${frontend.hostname}:1080/http.shield</socks.transport>
+      <ws.inactivity.timeout>60 seconds</ws.inactivity.timeout>
+    </accept-options>
+
+    <realm-name>demo</realm-name>
+
+    <cross-site-constraint>
+      <allow-origin>*</allow-origin>
+    </cross-site-constraint>
+  </service>
+
+
+  <security>
+
+    <keystore>
+      <type>JCEKS</type>
+      <file>keystore.db</file>
+      <password-file>keystore.pw</password-file>
+    </keystore>
+
+    <truststore>
+      <file>truststore.db</file>
+    </truststore>
+
+    <realm>
+      <name>demo</name>
+      <description>Sample realm for file-based authentication</description>
+
+      <authentication>
+        <http-challenge-scheme>Basic</http-challenge-scheme>
+        <login-modules>
+          <login-module>
+            <type>file</type>
+            <success>required</success>
+            <options>
+              <file>jaas-config.xml</file>
+            </options>
+          </login-module>
+        </login-modules>
+      </authentication>
+    </realm>
+
+  </security>
+
+
+</gateway-config>
