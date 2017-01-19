@@ -1,4 +1,4 @@
-FROM kaazing/enterprise-gateway:5.2.1
+FROM kaazing/development-enterprise-gateway:5.4.0-RC005
 
 # Add broker specific client libs
 ADD http://central.maven.org/maven2/org/apache/activemq/activemq-client/5.14.1/activemq-client-5.14.1.jar lib/ext/
