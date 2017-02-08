@@ -102,19 +102,12 @@
     <accept>udp://${gateway.hostname}:${webrtc.port}</accept>
     <connect>udp://coturn:3478</connect>
     
-    <!-- <type>turn.proxy</type> -->
-    <type>proxy</type>
+    <type>turn.proxy</type>
 
-
-<!--     <properties>
+	<properties>
        <key.alias>turnshared</key.alias>
-    </properties> -->
-	
-<!--     <accept-options>
-	<tcp.bind>${webrtc.port}</tcp.bind>
-    </accept-options>
- -->
- 
+    </properties>
+	 
   </service>
 
 
