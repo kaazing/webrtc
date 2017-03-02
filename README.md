@@ -47,12 +47,20 @@ You can setup the same configuration but this time using [Enterprise Shield](htt
 
 0. Create a `lib` directory in `GATEWAY_HOME/web/webrtc`.
 
-0. Next you need the client libraries. Download the [JavaScript client libraries](https://kaazing.com/download/#client-javascript). Extract the entire contents and of the zip file and put them in `GATEWAY_HOME/web/webrtc/lib`.
+0. Next you need the client libraries. Download the [JavaScript client libraries](https://kaazing.com/download/#client-javascript). Extract the entire contents and of the zip file and put them in `GATEWAY_HOME/web/webrtc/lib`. Also include the following libraries in the same `GATEWAY_HOME/web/webrtc/lib` folder:
+	- https://webrtc.github.io/adapter/adapter-2.0.4.js
+	- https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js
+	- https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/4.4.0/bootbox.min.js
+	- https://code.jquery.com/jquery-1.12.4.min.js
+
+0. Copy from `GATEWAY_HOME\web\webrtc\gateway\webrtc` the two files `client.js` and `index.html` to `GATEWAY_HOME\web\webrtc`.
+
+0. Change from the `gateway.config.xml` the webrtc.port property value. Set an unused port number. 
 
 0. Download and run a TURN server.  If you choose to use [coTURN](https://github.com/coturn/coturn/wiki/turnserver), start it with the following command:
 
   ```
-  coturn -n -a -v --use-auth-secret --realm=demo --static-auth-secret=kaazshared --rest-api-separator=:
+  turnserver -n -a -v --use-auth-secret --realm=demo --static-auth-secret=kaazshared --rest-api-separator=:
   ```
 
 0. Edit the `/etc/hosts` file on the machine where the Gateway will run and add the following:
@@ -104,6 +112,11 @@ You can setup the same configuration but this time using [Enterprise Shield](htt
 0. Open a second browser tab at [https://kaazing.example.com/demo/](https://kaazing.example.com/demo/) and log in with username **alice** and password **alice**.
 
 0. From the **alice** tab, you can now call bob.
+
+Additional notes:
+- You can test the WebRTC feature without the need of a webcam. There are two ways to do it:
+	- Install DroidCam App (https://www.dev47apps.com/) and after starting the demo in the browser, choose "Allow" access to the droidcam app fake camera
+	- Start chrome browser via terminal with `google-chrome --use-fake-ui-for-media-stream --use-file-for-fake-video-capture=path/to/file.y4m` options. (download a y4m file from the web eg. https://media.xiph.org/video/derf/y4m/). The fake video will display instead of the expected video stream.
 
 
 ##### Running High Availability (Optional)
