@@ -15,10 +15,11 @@ COPY webrtc/index.html web/webrtc/index.html
 COPY webrtc/client.js web/webrtc/client.js
 
 #Pull libs urls at build time instead of runtime
-ADD https://webrtc.github.io/adapter/adapter-2.0.4.js /kaazing-gateway/web/webrtc/lib/
-ADD https://code.jquery.com/jquery-1.12.4.min.js /kaazing-gateway/web/webrtc/lib/
-ADD https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js /kaazing-gateway/web/webrtc/lib/
-ADD https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/4.4.0/bootbox.min.js /kaazing-gateway/web/webrtc/lib/
+RUN mkdir -p /kaazing-gateway/web/webrtc/lib/ && \
+	wget https://webrtc.github.io/adapter/adapter-2.0.4.js --no-check-certificate  -O  /kaazing-gateway/web/webrtc/lib/adapter-2.0.4.js && \
+	wget https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js --no-check-certificate -O  /kaazing-gateway/web/webrtc/lib/bootstrap.min.js && \
+	wget https://cdnjs.cloudflare.com/ajax/libs/bootbox.js/4.4.0/bootbox.min.js --no-check-certificate -O  /kaazing-gateway/web/webrtc/lib/bootbox.min.js && \
+	wget https://code.jquery.com/jquery-1.12.4.min.js --no-check-certificate -O  /kaazing-gateway/web/webrtc/lib/jquery-1.12.4.min.js 
 
 
 #ADD https://cdn.kaazing.com/releases/enterprise.javascript.client/4.1.0/kaazing-enterprise-javascript-client-4.1.0.zip web/webrtc/
